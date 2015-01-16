@@ -23,7 +23,7 @@ Puppet::Type.type(:openldap).provide(:olc) do
   end
 
   def self.instances
-    
+
     o = slapcat '-b', 'cn=config', '-o', 'ldif-wrap=no', '-H', 'ldap:///???'
     o.split("\n\n").collect do |object|
       name = nil
@@ -35,13 +35,13 @@ Puppet::Type.type(:openldap).provide(:olc) do
         else
           k, encoded, v = line.match(/^([^:]+):(:)? (.*)$/).captures
 
+          # Don't include "internal" attributes
+          next if EXCLUDED.include?(k)
+
           # If we matched a second ':' it means the value is base64-encoded
           if encoded
             v = Base64.decode64(v)
           end
-
-          # Don't include "internal" attributes
-          next if EXCLUDED.include?(k)
 
           attributes[k] ||= []
           attributes[k] << v
@@ -95,7 +95,7 @@ Puppet::Type.type(:openldap).provide(:olc) do
         is = @property_hash[:attributes].keys
         should = @property_flush[:attributes].keys
         ops = []
-        
+
         # Remove any attributes that shouldn't exist at all
         (is - should).each do |k|
           ops << "delete: #{k}\n"
