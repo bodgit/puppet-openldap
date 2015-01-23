@@ -55,25 +55,34 @@ Puppet::Type.newtype(:openldap) do
     autos = []
 
     if self[:ensure] == :present
-      # If this resource should be present, autorequire the parent node
+      # If this resource should be present, autorequire the parent node or
+      # the previous sibling if the DN uses the positional {x} notation. Prefer
+      # the latter
 
       # A root node won't have a parent
       parent = self[:name].match(/(?<=,).+$/).to_s
 
-      catalog.resources.reject { |r|
-        ! r.is_a?(Puppet::Type.type(:openldap))
-      }.select { |r|
-        parent and parent == r.name and r.should(:ensure) == :present
+      # In the case of a position create a regexp that matches the previous
+      # sibling, i.e. 'cn={2}foo,ou=baz' produces /^cn=\{1\}[^,]+,ou=baz$/
+      if self[:name] =~ (/^([^=]+)=\{(-?\d+)\}[^,]+/)
+        sibling = /^#{$1}=\{#{$2.to_i - 1}\}[^,]+#{Regexp.escape($')}$/
+      end
+
+      auto = nil
+      catalog.resources.select { |r|
+        r.is_a?(Puppet::Type.type(:openldap)) and r.should(:ensure) == :present
       }.each { |r|
-        autos << r
+        auto ||= r if parent and r.name == parent
+        auto = r if sibling and r.name =~ sibling
       }
+      autos << auto if auto
     else
       # If this resource should be absent, autorequire any child nodes. Child
       # nodes that should be absent will therefore be removed first. Child
       # nodes that should be present will be created first and therefore 
       # trigger an error here as this node cannot now be removed
-      catalog.resources.reject { |r|
-        ! r.is_a?(Puppet::Type.type(:openldap))
+      catalog.resources.select { |r|
+        r.is_a?(Puppet::Type.type(:openldap))
       }.select { |r|
         r.name =~ /^[^,]+,#{self[:name]}$/
       }.each { |r|
