@@ -8,6 +8,7 @@ Puppet::Type.type(:openldap).provide(:olc) do
   mk_resource_methods
 
   EXCLUDED = [
+    'contextCSN',
     'createTimestamp',
     'creatorsName',
     'entryCSN',
@@ -143,7 +144,6 @@ Puppet::Type.type(:openldap).provide(:olc) do
 
       temp.rewind
       Puppet.debug(IO.read temp.path)
-      #ldapmodify '-Y', 'EXTERNAL', '-H', 'ldapi:///', '-n', '-f', temp.path
       ldapmodify '-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', temp.path
     ensure
       temp.close
