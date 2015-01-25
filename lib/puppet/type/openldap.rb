@@ -25,6 +25,16 @@ Puppet::Type.newtype(:openldap) do
         end
       end
 
+      # Prune any nils or zero-length values from each value array
+      value.each do |k,v|
+        v.reject! { |x| !x or x == :undef or x == '' }
+      end
+
+      # Prune any keys where the value is a zero-element array
+      value.select! do |k,v|
+        v.size > 0
+      end
+
       value
     end
 
