@@ -119,6 +119,16 @@ Puppet::Type.type(:openldap).provide(:olc) do
           # No differences, skip
           next if isv == shouldv
 
+          # If there's no overlap in values, use replace instead of add/delete
+          if (isv & shouldv).size == 0
+            op = "replace: #{k}\n"
+            shouldv.each do |v|
+              op << "#{k}: #{v}\n"
+            end
+            ops << op
+            next
+          end
+
           # Some values are deleted
           if (isv - shouldv).size > 0
             op = "delete: #{k}\n"
