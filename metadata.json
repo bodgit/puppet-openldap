@@ -1,0 +1,52 @@
+{
+  "name": "bodgit-openldap",
+  "version": "1.0.0",
+  "author": "bodgit",
+  "summary": "Puppet Module for managing OpenLDAP",
+  "license": "Apache-2.0",
+  "source": "https://github.com/bodgit/puppet-openldap",
+  "project_page": "https://github.com/bodgit/puppet-openldap",
+  "issues_url": "https://github.com/bodgit/puppet-openldap/issues",
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "CentOS",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "OracleLinux",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Scientific",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": "3.x"
+    }
+  ],
+  "tags": [
+    "openldap",
+    "ldap"
+  ],
+  "dependencies": [
+    {
+      "name": "puppetlabs/stdlib",
+      "version_requirement": ">=4.2.0 <5.0.0"
+    }
+  ]
+}
