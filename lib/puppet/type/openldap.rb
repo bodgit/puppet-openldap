@@ -103,6 +103,15 @@ Puppet::Type.newtype(:openldap) do
     autos
   end
 
+  autorequire(:file) do
+    # Autorequire the file resource used by the database backend
+    if self[:attributes]
+      self[:attributes].select { |k,v| k =~ /^olcDbDirectory$/i }.values.flatten
+    else
+      []
+    end
+  end
+
   autorequire(:service) do
     # Autorequire the slapd service otherwise modifications won't work
     [self[:service]]
