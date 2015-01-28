@@ -1,3 +1,5 @@
+require 'set'
+
 Puppet::Type.newtype(:openldap) do
 
   @doc = 'Manage openldap configuration objects'
@@ -39,26 +41,47 @@ Puppet::Type.newtype(:openldap) do
     end
 
     def insync?(is)
-      # is and should can present keys in differing order which throws the
-      # comparison off. The values should be sorted too. Keys should be
-      # converted to lowercase as well
-      a = Hash[is.sort_by { |k,v| k.downcase }.collect { |k,v| [k.downcase, v] }]
-      b = Hash[should.sort_by { |k,v| k.downcase }.collect { |k,v| [k.downcase, v] }]
+      # Copy 'is' and 'should' and convert all of the keys to lower case
+      a = Hash[is.collect { |k,v| [k.downcase, v] }]
+      b = Hash[should.collect { |k,v| [k.downcase, v] }]
 
-      a.keys.each do |k|
-        a[k] = a[k].sort
-      end
-      b.keys.each do |k|
-        b[k] = b[k].sort
+      case @resource[:purge]
+      when :false
+        # The keys in 'b' are a subset of the keys in 'a'
+        return false unless a.keys.to_set >= b.keys.to_set
+        b.keys.each do |k|
+          # The value of each key in 'b' is a subset of the same value in 'a'
+          return false unless a[k].to_set >= b[k].to_set
+        end
+      when :partial
+        # The keys in 'b' are a subset of the keys in 'a'
+        return false unless a.keys.to_set >= b.keys.to_set
+        b.keys.each do |k|
+          # The value of each key in 'b' must be equal to the same value in 'a'
+          return false unless a[k].to_set == b[k].to_set
+        end
+      else
+        # The keys in 'b' are eaual to the keys in 'a'
+        return false unless a.keys.to_set == b.keys.to_set
+        b.keys.each do |k|
+          # The value of each key in 'b' must be equal to the same value in 'a'
+          return false unless a[k].to_set == b[k].to_set
+        end
       end
 
-      a == b
+      true
     end
   end
 
   newparam(:service) do
     desc 'The name of the slapd service'
     defaultto('slapd')
+  end
+
+  newparam(:purge) do
+    desc 'Purge unmanaged attributes'
+    newvalues(:true, :false, :partial)
+    defaultto(:true)
   end
 
   autorequire(:openldap) do

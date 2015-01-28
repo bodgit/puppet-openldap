@@ -98,8 +98,10 @@ Puppet::Type.type(:openldap).provide(:olc) do
         ops = []
 
         # Remove any attributes that shouldn't exist at all
-        (is - should).each do |k|
-          ops << "delete: #{k}\n"
+        if resource[:purge] == :true
+          (is - should).each do |k|
+            ops << "delete: #{k}\n"
+          end
         end
 
         # Add any attributes that didn't exist at all and now should
@@ -117,10 +119,10 @@ Puppet::Type.type(:openldap).provide(:olc) do
           shouldv = @property_flush[:attributes][k].sort
 
           # No differences, skip
-          next if isv == shouldv
+          #next if isv == shouldv
 
           # If there's no overlap in values, use replace instead of add/delete
-          if (isv & shouldv).size == 0
+          if (isv & shouldv).size == 0 and resource[:purge] != :false
             op = "replace: #{k}\n"
             shouldv.each do |v|
               op << "#{k}: #{v}\n"
@@ -130,7 +132,7 @@ Puppet::Type.type(:openldap).provide(:olc) do
           end
 
           # Some values are deleted
-          if (isv - shouldv).size > 0
+          if (isv - shouldv).size > 0 and resource[:purge] != :false
             op = "delete: #{k}\n"
             (isv - shouldv).each do |v|
               op << "#{k}: #{v}\n"
