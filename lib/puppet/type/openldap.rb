@@ -61,7 +61,7 @@ Puppet::Type.newtype(:openldap) do
           return false unless a[k].to_set == b[k].to_set
         end
       else
-        # The keys in 'b' are eaual to the keys in 'a'
+        # The keys in 'b' are equal to the keys in 'a'
         return false unless a.keys.to_set == b.keys.to_set
         b.keys.each do |k|
           # The value of each key in 'b' must be equal to the same value in 'a'
