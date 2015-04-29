@@ -1,0 +1,3 @@
+# !!! Managed by Puppet !!!
+
+SLAPD_URLS="ldapi:///<% if @ldap_interfaces.size > 0 %> <%= @ldap_interfaces.join(' ') %><% end %><% if @ldaps_interfaces.size > 0 %> <%= @ldaps_interfaces.join(' ') %><% end %>"

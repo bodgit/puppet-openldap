@@ -1,0 +1,20 @@
+HOSTS:
+  centos-70-x64-producer:
+    roles:
+      - producer
+      - default
+    platform: el-7-x86_64
+    box: puppetlabs/centos-7.0-64-nocm
+    box_url: https://vagrantcloud.com/puppetlabs/boxes/centos-7.0-64-nocm
+    hypervisor: vagrant
+    ip: 10.255.33.1
+  centos-70-x64-consumer:
+    roles:
+      - consumer
+    platform: el-7-x86_64
+    box: puppetlabs/centos-7.0-64-nocm
+    box_url: https://vagrantcloud.com/puppetlabs/boxes/centos-7.0-64-nocm
+    hypervisor: vagrant
+    ip: 10.255.33.2
+CONFIG:
+  type: foss
