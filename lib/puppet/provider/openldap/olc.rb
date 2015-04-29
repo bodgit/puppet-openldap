@@ -74,92 +74,96 @@ Puppet::Type.type(:openldap).provide(:olc) do
   end
 
   def flush
-    begin
-      temp = Tempfile.new("openldap.#{resource[:name]}")
-      temp << "dn: #{resource[:name]}\n"
+    if @property_flush[:ensure] == :present and resource[:ldif] then
+      ldapmodify '-Y', 'EXTERNAL', '-H', 'ldapi:///', '-a', '-f', resource[:ldif]
+    else
+      begin
+        temp = Tempfile.new("openldap.#{resource[:name]}")
+        temp << "dn: #{resource[:name]}\n"
 
-      case @property_flush[:ensure]
-      when :absent
-        temp << "changetype: delete\n"
-      when :present
-        temp << "changetype: add\n"
-        resource[:attributes].each do |k,values|
-          values.each do |v|
-            temp << "#{k}: #{v}\n"
-          end
-        end
-      end
-
-      if @property_flush[:attributes]
-        temp << "changetype: modify\n"
-
-        is = @property_hash[:attributes].keys
-        should = @property_flush[:attributes].keys
-        ops = []
-
-        # Remove any attributes that shouldn't exist at all
-        if resource[:purge] == :true
-          (is - should).each do |k|
-            ops << "delete: #{k}\n"
-          end
-        end
-
-        # Add any attributes that didn't exist at all and now should
-        (should - is).each do |k|
-          op = "add: #{k}\n"
-          @property_flush[:attributes][k].each do |v|
-            op << "#{k}: #{v}\n"
-          end
-          ops << op
-        end
-
-        # Now deal with attributes that already exist in some form
-        (should & is).each do |k|
-          isv = @property_hash[:attributes][k].sort
-          shouldv = @property_flush[:attributes][k].sort
-
-          # No differences, skip
-          #next if isv == shouldv
-
-          # If there's no overlap in values, use replace instead of add/delete
-          if (isv & shouldv).size == 0 and resource[:purge] != :false
-            op = "replace: #{k}\n"
-            shouldv.each do |v|
-              op << "#{k}: #{v}\n"
+        case @property_flush[:ensure]
+        when :absent
+          temp << "changetype: delete\n"
+        when :present
+          temp << "changetype: add\n"
+          resource[:attributes].each do |k,values|
+            values.each do |v|
+              temp << "#{k}: #{v}\n"
             end
-            ops << op
-            next
           end
+        end
 
-          # Some values are deleted
-          if (isv - shouldv).size > 0 and resource[:purge] != :false
-            op = "delete: #{k}\n"
-            (isv - shouldv).each do |v|
-              op << "#{k}: #{v}\n"
+        if @property_flush[:attributes]
+          temp << "changetype: modify\n"
+
+          is = @property_hash[:attributes].keys
+          should = @property_flush[:attributes].keys
+          ops = []
+
+          # Remove any attributes that shouldn't exist at all
+          if resource[:purge] == :true
+            (is - should).each do |k|
+              ops << "delete: #{k}\n"
             end
-            ops << op
           end
 
-          # Some values are added
-          if (shouldv - isv).size > 0
+          # Add any attributes that didn't exist at all and now should
+          (should - is).each do |k|
             op = "add: #{k}\n"
-            (shouldv - isv).each do |v|
+            @property_flush[:attributes][k].each do |v|
               op << "#{k}: #{v}\n"
             end
             ops << op
           end
+
+          # Now deal with attributes that already exist in some form
+          (should & is).each do |k|
+            isv = @property_hash[:attributes][k].sort
+            shouldv = @property_flush[:attributes][k].sort
+
+            # No differences, skip
+            #next if isv == shouldv
+
+            # If there's no overlap in values, use replace instead of add/delete
+            if (isv & shouldv).size == 0 and resource[:purge] != :false
+              op = "replace: #{k}\n"
+              shouldv.each do |v|
+                op << "#{k}: #{v}\n"
+              end
+              ops << op
+              next
+            end
+
+            # Some values are deleted
+            if (isv - shouldv).size > 0 and resource[:purge] != :false
+              op = "delete: #{k}\n"
+              (isv - shouldv).each do |v|
+                op << "#{k}: #{v}\n"
+              end
+              ops << op
+            end
+
+            # Some values are added
+            if (shouldv - isv).size > 0
+              op = "add: #{k}\n"
+              (shouldv - isv).each do |v|
+                op << "#{k}: #{v}\n"
+              end
+              ops << op
+            end
+          end
+
+          # Separate each LDIF operation with a '-'
+          temp << ops.join("-\n")
         end
 
-        # Separate each LDIF operation with a '-'
-        temp << ops.join("-\n")
+        temp.rewind
+        Puppet.debug(IO.read temp.path)
+        ldapmodify '-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', temp.path
+      ensure
+        temp.close
+        temp.unlink
       end
-
-      temp.rewind
-      Puppet.debug(IO.read temp.path)
-      ldapmodify '-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', temp.path
-    ensure
-      temp.close
-      temp.unlink
     end
   end
 

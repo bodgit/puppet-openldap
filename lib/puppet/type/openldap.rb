@@ -1,3 +1,4 @@
+require 'pathname'
 require 'set'
 
 Puppet::Type.newtype(:openldap) do
@@ -48,14 +49,14 @@ Puppet::Type.newtype(:openldap) do
       case @resource[:purge]
       when :false
         # The keys in 'b' are a subset of the keys in 'a'
-        return false unless a.keys.to_set >= b.keys.to_set
+        return false unless a.keys.to_set.superset?(b.keys.to_set)
         b.keys.each do |k|
           # The value of each key in 'b' is a subset of the same value in 'a'
-          return false unless a[k].to_set >= b[k].to_set
+          return false unless a[k].to_set.superset?(b[k].to_set)
         end
       when :partial
         # The keys in 'b' are a subset of the keys in 'a'
-        return false unless a.keys.to_set >= b.keys.to_set
+        return false unless a.keys.to_set.superset?(b.keys.to_set)
         b.keys.each do |k|
           # The value of each key in 'b' must be equal to the same value in 'a'
           return false unless a[k].to_set == b[k].to_set
@@ -82,6 +83,15 @@ Puppet::Type.newtype(:openldap) do
     desc 'Purge unmanaged attributes'
     newvalues(:true, :false, :partial)
     defaultto(:true)
+  end
+
+  newparam(:ldif) do
+    desc 'LDIF file containing object to load'
+
+    validate do |value|
+      pn = Pathname.new value
+      raise ArgumentError, 'The LDIF file must be fully qualified' unless pn.absolute?
+    end
   end
 
   autorequire(:openldap) do
@@ -126,13 +136,32 @@ Puppet::Type.newtype(:openldap) do
     autos
   end
 
+  # Object attributes where the value is a file or directory
+  FILE_ATTRIBUTES = [
+    'olcargsfile',
+    'olcdbdirectory',
+    'olcpidfile',
+    'olctlscacertificatefile',
+    'olctlscacertificatepath',
+    'olctlscertificatefile',
+    'olctlscertificatekeyfile',
+    'olctlsdhparamfile',
+  ]
+
   autorequire(:file) do
-    # Autorequire the file resource used by the database backend
+    autos = []
+
+    # Autorequire any file resource pointed at by the given attributes
     if self[:attributes]
-      self[:attributes].select { |k,v| k =~ /^olcDbDirectory$/i }.values.flatten
-    else
-      []
+      autos += self[:attributes].select { |k,v| FILE_ATTRIBUTES.include?(k.downcase) }.values.flatten
     end
+
+    # Autorequire the LDIF file if passed
+    if self[:ldif]
+      autos << self[:ldif]
+    end
+
+    autos
   end
 
   autorequire(:service) do
