@@ -1,0 +1,86 @@
+# !!! Managed by Puppet !!!
+
+<% if @uri -%>
+URI				<%= @uri.join(' ') %>
+<% end -%>
+<% if @base -%>
+BASE				<%= @base %>
+<% end -%>
+<% if @binddn -%>
+BINDDN				<%= @binddn %>
+<% end -%>
+<% if @deref -%>
+DEREF				<%= @deref %>
+<% end -%>
+<% if @network_timeout -%>
+NETWORK_TIMEOUT			<%= @network_timeout %>
+<% end -%>
+<% if @referrals -%>
+REFERRALS			<%= @referrals %>
+<% end -%>
+<% if @sizelimit -%>
+SIZELIMIT			<%= @sizelimit %>
+<% end -%>
+<% if @timelimit -%>
+TIMELIMIT			<%= @timelimit %>
+<% end -%>
+<% if @timeout -%>
+TIMEOUT				<%= @timeout %>
+<% end -%>
+<% if @sasl_mech -%>
+SASL_MECH			<%= @sasl_mech %>
+<% end -%>
+<% if @sasl_realm -%>
+SASL_REALM			<%= @sasl_realm %>
+<% end -%>
+<% if @sasl_authcid -%>
+SASL_AUTHCID			<%= @sasl_authcid %>
+<% end -%>
+<% if @sasl_authzid -%>
+SASL_AUTHZID			<%= @sasl_authzid %>
+<% end -%>
+<% if @sasl_secprops -%>
+SASL_SECPROPS			<%= @sasl_secprops.join(',') %>
+<% end -%>
+<% if @sasl_nocanon -%>
+SASL_NOCANON			<%= @sasl_nocanon %>
+<% end -%>
+<% if @gssapi_sign -%>
+GSSAPI_SIGN			<%= @gssapi_sign %>
+<% end -%>
+<% if @gssapi_encrypt -%>
+GSSAPI_ENCRYPT			<%= @gssapi_encrypt %>
+<% end -%>
+<% if @gssapi_allow_remote_principal -%>
+GSSAPI_ALLOW_REMOTE_PRINCIPAL	<%= @gssapi_allow_remote_principal %>
+<% end -%>
+<% if @tls_cacert -%>
+TLS_CACERT			<%= @tls_cacert %>
+<% end -%>
+<% if @tls_cacertdir -%>
+TLS_CACERTDIR			<%= @tls_cacertdir %>
+<% end -%>
+<% if @tls_cert -%>
+TLS_CERT			<%= @tls_cert %>
+<% end -%>
+<% if @tls_key -%>
+TLS_KEY				<%= @tls_key %>
+<% end -%>
+<% if @tls_cipher_suite -%>
+TLS_CIPHER_SUITE		<%= @tls_cipher_suite %>
+<% end -%>
+<% if @tls_protocol_min -%>
+TLS_PROTOCOL_MIN		<%= @tls_protocol_min %>
+<% end -%>
+<% if @tls_randfile -%>
+TLS_RANDFILE			<%= @tls_randfile %>
+<% end -%>
+<% if @tls_reqcert -%>
+TLS_REQCERT			<%= @tls_reqcert %>
+<% end -%>
+<% if @tls_crlcheck -%>
+TLS_CRLCHECK			<%= @tls_crlcheck %>
+<% end -%>
+<% if @tls_crlfile -%>
+TLS_CRLFILE			<%= @tls_crlfile %>
+<% end -%>
