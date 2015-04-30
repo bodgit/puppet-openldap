@@ -2,12 +2,11 @@ require 'pathname'
 require 'set'
 
 Puppet::Type.newtype(:openldap) do
-
   @doc = 'Manage openldap configuration objects'
 
   ensurable do
-   defaultvalues
-   defaultto(:present)
+    defaultvalues
+    defaultto(:present)
   end
 
   newparam(:name) do
@@ -23,9 +22,7 @@ Puppet::Type.newtype(:openldap) do
 
       # Ensure every value is an array
       value.each do |k,v|
-        if ! v.is_a?(Array)
-          value[k] = [v]
-        end
+        value[k] = [v] unless v.is_a?(Array)
       end
 
       # Prune any nils or zero-length values from each value array

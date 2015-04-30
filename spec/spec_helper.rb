@@ -15,4 +15,4 @@ shared_examples :compile, :compile => true do
   it { should compile.with_all_deps }
 end
 
-at_exit { RSpec::Puppet::Coverage::report! }
+at_exit { RSpec::Puppet::Coverage.report! }
