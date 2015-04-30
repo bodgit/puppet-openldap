@@ -11,54 +11,29 @@ describe 'openldap::server' do
   end
 
   it 'should work with no errors' do
-    #master = only_host_with_role(hosts, 'master')
-    #slave = only_host_with_role(hosts, 'slave')
-
-    #pp = <<-EOS
-    #  class { '::openldap::server':
-    #    base_dn       => 'dc=example,dc=com',
-    #    root_dn       => 'cn=Manager,dc=example,dc=com',
-    #    root_password => '{SSHA}Xc4HG4EgGg4Lo/F1e6n+q7N2EHOOmtny',
-    #    masters       => [
-    #      'ldap://10.255.33.1/',
-    #      'ldap://10.255.33.2/',
-    #      'ldap://10.255.33.3/',
-    #    ],
-    #  }
-    #EOS
-
-    #masters = hosts_with_role(hosts, 'multimaster')
-
-    #masters.each do |master|
-    #  pp = <<-EOS
-    #    class { '::openldap::server':
-    #      base_dn       => 'dc=example,dc=com',
-    #      root_dn       => 'cn=Manager,dc=example,dc=com',
-    #      root_password => '{SSHA}Xc4HG4EgGg4Lo/F1e6n+q7N2EHOOmtny',
-    #      ldap_interfaces => ['#{master.ip}'],
-    #      masters       => [
-    #        'ldap://10.255.33.1/',
-    #        'ldap://10.255.33.2/',
-    #        'ldap://10.255.33.3/',
-    #      ],
-    #      ssl_cert      => '/etc/pki/tls/ldap.crt',
-    #      ssl_ca        => '/etc/pki/tls/ca.crt',
-    #      ssl_key       => '/etc/pki/tls/ldap.key',
-    #      ssl_protocol  => '3.3',
-    #    }
-    #  EOS
-
-    #  apply_manifest_on(master, pp, :catch_failures => true)
-    #  apply_manifest_on(master, pp, :catch_changes  => true)
-    #end
+    # FIXME replication
+    # producer  = only_host_with_role(hosts, 'producer')
+    # consumers = hosts_with_role(hosts, 'consumer')
+    # apply_manifest_on(producer, pp, :catch_failures => true)
+    # apply_manifest_on(producer, pp, :catch_changes  => true)
+    # consumers.each do |consumer|
+    #   apply_manifest_on(consumer, pp, :catch_failures => true)
+    #   apply_manifest_on(consumer, pp, :catch_changes  => true)
+    # end
 
     pp = <<-EOS
+      include ::firewall
       include ::openldap
       include ::openldap::client
       class { '::openldap::server':
-        root_dn       => 'cn=Manager,dc=example,dc=com',
-        root_password => '{SSHA}Xc4HG4EgGg4Lo/F1e6n+q7N2EHOOmtny',
-        suffix        => 'dc=example,dc=com',
+        root_dn         => 'cn=Manager,dc=example,dc=com',
+        root_password   => 'secret',
+        suffix          => 'dc=example,dc=com',
+        access          => [
+          'to attrs=userPassword by self =xw by anonymous auth',
+          'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by users read',
+        ],
+        ldap_interfaces => ['#{default.ip}'],
       }
       ::openldap::server::schema { 'cosine':
         position => 1,
@@ -100,5 +75,20 @@ describe 'openldap::server' do
         dn: olcDatabase={2}hdb,cn=config
       EOS
     end
+  end
+
+  # Import the example database
+  describe command('ldapadd -Y EXTERNAL -H ldapi:/// -f /root/example.ldif') do
+    its(:exit_status) { should eq 0 }
+  end
+
+  describe port(389) do
+    it { should be_listening.on(default.ip).with('tcp') }
+  end
+
+  # Test that TCP works, binds work, and that no password hashes are disclosed
+  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w password") do
+    its(:exit_status) { should eq 0 }
+    its(:stdout) { should_not match /^userPassword/ }
   end
 end

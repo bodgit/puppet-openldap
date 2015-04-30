@@ -1,0 +1,39 @@
+dn: dc=example,dc=com
+objectClass: dcObject
+objectClass: organization
+dc: example
+o: example
+
+dn: cn=replicator,dc=example,dc=com
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: replicator
+userPassword: secret
+
+dn: ou=people,dc=example,dc=com
+objectClass: organizationalUnit
+ou: people
+
+dn: uid=alice,ou=people,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: alice
+sn: Example
+givenName: Alice
+cn: Alice Example
+displayName: Alice Example
+uidNumber: 1000
+gidNumber: 1000
+gecos: Alice Example
+userPassword: password
+loginShell: /bin/bash
+homeDirectory: /home/alice
+shadowExpire: -1
+shadowFlag: 0
+shadowWarning: 7
+shadowMin: 8
+shadowMax: 999999
+shadowLastChange: 10877
+mail: alice@example.com
+
