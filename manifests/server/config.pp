@@ -51,7 +51,7 @@ class openldap::server::config {
   }
 
   openldap { 'cn=config':
-    ensure     => 'present',
+    ensure     => present,
     attributes => {
       'cn'                       => 'config',
       'objectClass'              => 'olcGlobal',
