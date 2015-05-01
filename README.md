@@ -520,7 +520,7 @@ positional syntax, (`Openldap['olcDatabase={0}config,cn=config'] ->
 Openldap['olcDatabase={1}monitor,cn=config']`). Other relationships should
 be explicitly declared if certain objects are required to exist before others.
 
-** Parameters within `openldap`:**
+**Parameters within `openldap`:**
 
 ##### `ensure`
 
@@ -760,9 +760,10 @@ class { '::openldap::server':
 
 Rather than expose overlays, modules, databases, etc. as defined or native
 types and leave the user to build their own configuration this module takes
-the decision to hide most of this complexity. This is largely due to a number
-of behaviours and idiosyncrasies of OpenLDAP; the order of overlays matters
-for example.
+the decision to hide most of this complexity and build what most people
+probably want out of OpenLDAP; a single database, possibly replicated. This
+is largely due to a number of behaviours and idiosyncrasies of OpenLDAP; the
+order of overlays matters for example.
 
 As alluded to by the [`openldap`](#native-type-openldap) native type, a lot of
 attributes or objects are additive and can't be deleted without manually
