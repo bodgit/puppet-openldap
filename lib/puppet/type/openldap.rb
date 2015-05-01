@@ -30,6 +30,11 @@ Puppet::Type.newtype(:openldap) do
         v.reject! { |x| !x or x == :undef or x == '' }
       end
 
+      # Ensure every value is a string
+      value.each do |k,v|
+        v.collect! { |x| x.to_s }
+      end
+
       # Prune any keys where the value is a zero-element array
       value.select! do |k,v|
         v.size > 0

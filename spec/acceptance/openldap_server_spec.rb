@@ -34,6 +34,7 @@ describe 'openldap::server' do
           'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by users read',
         ],
         ldap_interfaces => ['#{default.ip}'],
+        local_ssf       => 256,
       }
       ::openldap::server::schema { 'cosine':
         position => 1,

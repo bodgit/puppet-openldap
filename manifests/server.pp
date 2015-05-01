@@ -17,11 +17,13 @@ class openldap::server (
   $ldap_interfaces     = $::openldap::params::ldap_interfaces,
   $ldaps_interfaces    = $::openldap::params::ldaps_interfaces,
   $limits              = [],
+  $local_ssf           = undef,
   $module_extension    = $::openldap::params::module_extension,
   $package_name        = $::openldap::params::server_package_name,
   $pid_file            = $::openldap::params::pid_file,
   $replica_dn          = undef,
   $schema_dir          = $::openldap::params::schema_dir,
+  $security            = undef,
   $ssl_ca              = $::openldap::params::ssl_ca,
   $ssl_cert            = $::openldap::params::ssl_cert,
   $ssl_certs_dir       = $::openldap::params::ssl_certs_dir,
@@ -60,9 +62,15 @@ class openldap::server (
   if $limits {
     validate_array($limits)
   }
+  if $local_ssf {
+    validate_integer($local_ssf)
+  }
   validate_string($package_name)
   validate_absolute_path($pid_file)
   validate_absolute_path($schema_dir)
+  if $security {
+    validate_re($security, '^\w+=\d+(?:\s+\w+=\d+)*$')
+  }
   if $ssl_ca {
     validate_absolute_path($ssl_ca)
   }

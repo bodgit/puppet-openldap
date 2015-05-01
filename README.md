@@ -245,6 +245,10 @@ An array of limits in the same form as the `olcLimits` attribute.
 Do not include a limit for the DN used by replication, one is added
 automatically when the `syncprov` parameter is used.
 
+##### `local_ssf`
+
+Security strength factor assigned to `ldapi` connections.
+
 ##### `module_extension`
 
 The extension module files have, normally `.la`.
@@ -267,6 +271,11 @@ server in order to replicate content.
 The base directory used to store the schemas shipped with OpenLDAP. This is
 used as a default by the
 [`openldap::server::schema`](#defined-type-openldapserverschema) defined type.
+
+##### `security`
+
+Specify minimum security strength factors in the same form as the
+`olcSecurity` attribute.
 
 ##### `ssl_ca`
 
