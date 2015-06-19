@@ -26,5 +26,6 @@ PuppetLint.configuration.log_format = '%{path}:%{linenumber}:%{check}:%{KIND}:%{
 PuppetLint.configuration.ignore_paths = ['spec/**/*.pp']
 PuppetLint.configuration.fail_on_warnings = true
 PuppetLint.configuration.relative = true
+PuppetLint.configuration.send('disable_class_inherits_from_params_class')
 
 PuppetSyntax.exclude_paths = ['spec/**/*.pp']
