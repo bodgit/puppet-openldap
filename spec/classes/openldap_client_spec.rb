@@ -1,12 +1,5 @@
 require 'spec_helper'
 
-shared_examples_for 'openldap::client' do
-  it { should contain_anchor('openldap::client::begin') }
-  it { should contain_anchor('openldap::client::end') }
-  it { should contain_class('openldap::client') }
-  it { should contain_class('openldap::client::install') }
-end
-
 describe 'openldap::client' do
 
   context 'without openldap class included' do
@@ -25,78 +18,22 @@ describe 'openldap::client' do
       'include ::openldap'
     end
 
-    context 'on RedHat' do
-      let(:facts) do
-        {
-          :osfamily => 'RedHat'
-        }
-      end
+    on_supported_os.each do |os, facts|
+      context "on #{os}", :compile do
+        let(:facts) do
+          facts
+        end
 
-      [6, 7].each do |version|
-        context "version #{version}", :compile do
-          let(:facts) do
-            super().merge(
-              {
-                :operatingsystemmajrelease => version
-              }
-            )
-          end
+        it { should contain_anchor('openldap::client::begin') }
+        it { should contain_anchor('openldap::client::end') }
+        it { should contain_class('openldap::client') }
+        it { should contain_class('openldap::client::install') }
 
-          it_behaves_like 'openldap::client'
-
+        case facts[:osfamily]
+        when 'Debian'
+          it { should contain_package('ldap-utils') }
+        when 'RedHat'
           it { should contain_package('openldap-clients') }
-        end
-      end
-    end
-
-    context 'on Ubuntu' do
-      let(:facts) do
-        {
-          :osfamily        => 'Debian',
-          :operatingsystem => 'Ubuntu',
-          :lsbdistid       => 'Ubuntu'
-        }
-      end
-
-      ['precise', 'trusty'].each do |codename|
-        context "#{codename}", :compile do
-          let(:facts) do
-            super().merge(
-              {
-                :lsbdistcodename => codename
-              }
-            )
-          end
-
-          it_behaves_like 'openldap::client'
-
-          it { should contain_package('ldap-utils') }
-        end
-      end
-    end
-
-    context 'on Debian' do
-      let(:facts) do
-        {
-          :osfamily        => 'Debian',
-          :operatingsystem => 'Debian',
-          :lsbdistid       => 'Debian'
-        }
-      end
-
-      ['squeeze', 'wheezy'].each do |codename|
-        context "#{codename}", :compile do
-          let(:facts) do
-            super().merge(
-              {
-                :lsbdistcodename => codename
-              }
-            )
-          end
-
-          it_behaves_like 'openldap::client'
-
-          it { should contain_package('ldap-utils') }
         end
       end
     end

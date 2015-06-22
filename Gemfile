@@ -9,6 +9,7 @@ group :development, :test do
   gem 'librarian-puppet', '< 2.0.0', :require => false
   gem 'beaker',                      :require => false
   gem 'beaker-rspec',                :require => false
+  gem 'rspec-puppet-facts',          :require => false
 end
 
 if facterversion = ENV['FACTER_GEM_VERSION']
