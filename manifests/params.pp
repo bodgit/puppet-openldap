@@ -1,6 +1,7 @@
 #
 class openldap::params {
 
+  $auditlog_file       = ''
   $ldap_interfaces     = ['']
   $ldaps_interfaces    = []
   $module_extension    = '.la'

@@ -141,6 +141,7 @@ Puppet::Type.newtype(:openldap) do
   # Object attributes where the value is a file or directory
   FILE_ATTRIBUTES = [
     'olcargsfile',
+    'olcauditlogfile',
     'olcdbdirectory',
     'olcpidfile',
     'olctlscacertificatefile',

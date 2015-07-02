@@ -33,6 +33,8 @@ describe 'openldap::server' do
           'to attrs=userPassword by self =xw by anonymous auth',
           'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by users read',
         ],
+        auditlog        => true,
+        auditlog_file   => '/tmp/auditlog.ldif',
         ldap_interfaces => ['#{default.ip}'],
         local_ssf       => 256,
       }
@@ -74,6 +76,7 @@ describe 'openldap::server' do
         dn: olcDatabase={0}config,cn=config
         dn: olcDatabase={1}monitor,cn=config
         dn: olcDatabase={2}hdb,cn=config
+        dn: olcOverlay={0}auditlog,olcDatabase={2}hdb,cn=config
       EOS
     end
   end
@@ -91,5 +94,18 @@ describe 'openldap::server' do
   describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w password") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should_not match /^userPassword/ }
+  end
+
+  # Test password change
+  describe command("ldappasswd -H ldap://#{default.ip}/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s secret") do
+    its(:exit_status) { should eq 0 }
+  end
+
+  # Test password modification made it into the audit log
+  describe file('/tmp/auditlog.ldif') do
+    it { should be_file }
+    its(:content) { should match /^changetype: modify$/ }
+    its(:content) { should match /^replace: userPassword$/ }
+    its(:content) { should match /^userPassword:: e1NTSEF9/ }
   end
 end

@@ -117,6 +117,69 @@ describe 'openldap::server' do
           end
         end
 
+        context 'with auditlog enabled', :compile do
+          let(:params) do
+            super().merge(
+              {
+                :auditlog      => true,
+                :auditlog_file => '/tmp/auditlog.ldif',
+              }
+            )
+          end
+
+          it_behaves_like "openldap::server on #{facts[:osfamily]}"
+
+          it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage'],
+              'olcDatabase'    => ['{2}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/data'],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'      => ['secret'],
+              'olcSuffix'      => ['dc=example,dc=com'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={0}auditlog,olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'     => [
+                'olcOverlayConfig',
+                'olcAuditlogConfig',
+              ],
+              'olcOverlay'      => ['{0}auditlog'],
+              'olcAuditlogFile' => ['/tmp/auditlog.ldif'],
+            }
+          ) }
+
+          case facts[:osfamily]
+          when 'Debian'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_monitor.la',
+                  '{1}back_hdb.la',
+                  '{2}auditlog.la',
+                ],
+              }
+            ) }
+          when 'RedHat'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}auditlog.la',
+                ],
+              }
+            ) }
+          end
+        end
+
         context 'with syncrepl enabled', :compile do
           let(:params) do
             super().merge(
@@ -178,7 +241,82 @@ describe 'openldap::server' do
           end
         end
 
-        context 'with syncrepl enabled and delta-syncrepl enabled', :compile do
+        context 'with syncrepl and auditlog enabled', :compile do
+          let(:params) do
+            super().merge(
+              {
+                :auditlog      => true,
+                :auditlog_file => '/tmp/auditlog.ldif',
+                :syncprov      => true,
+                :replica_dn    => 'cn=replicator,dc=example,dc=com',
+              }
+            )
+          end
+
+          it_behaves_like "openldap::server on #{facts[:osfamily]}"
+
+          it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => [
+                '{0}to * by dn.exact="cn=replicator,dc=example,dc=com" read by * break',
+                '{1}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage',
+              ],
+              'olcDatabase'    => ['{2}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/data'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
+              'olcLimits'      => [
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+              ],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'      => ['secret'],
+              'olcSuffix'      => ['dc=example,dc=com'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={0}syncprov,olcDatabase={2}hdb,cn=config') }
+          it { should contain_openldap('olcOverlay={1}auditlog,olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'     => [
+                'olcOverlayConfig',
+                'olcAuditlogConfig',
+              ],
+              'olcOverlay'      => ['{1}auditlog'],
+              'olcAuditlogFile' => ['/tmp/auditlog.ldif'],
+            }
+          ) }
+
+          case facts[:osfamily]
+          when 'Debian'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_monitor.la',
+                  '{1}back_hdb.la',
+                  '{2}syncprov.la',
+                  '{3}auditlog.la',
+                ],
+              }
+            ) }
+          when 'RedHat'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}syncprov.la',
+                  '{1}auditlog.la',
+                ],
+              }
+            ) }
+          end
+        end
+
+        context 'with delta-syncrepl enabled', :compile do
           let(:params) do
             super().merge(
               {
@@ -260,6 +398,108 @@ describe 'openldap::server' do
                 'olcModuleLoad' => [
                   '{0}syncprov.la',
                   '{1}accesslog.la',
+                ],
+              }
+            ) }
+          end
+        end
+
+        context 'with delta-syncrepl and auditlog enabled', :compile do
+          let(:params) do
+            super().merge(
+              {
+                :auditlog      => true,
+                :auditlog_file => '/tmp/auditlog.ldif',
+                :syncprov      => true,
+                :replica_dn    => 'cn=replicator,dc=example,dc=com',
+                :accesslog     => true,
+              }
+            )
+          end
+
+          it_behaves_like "openldap::server on #{facts[:osfamily]}"
+
+          it { should contain_file('/var/lib/ldap/log') }
+          it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => [
+                '{0}to * by dn.exact="cn=replicator,dc=example,dc=com" read',
+              ],
+              'olcDatabase'    => ['{2}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/log'],
+              'olcDbIndex'     => [
+                'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
+              ],
+              'olcLimits'      => [
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+              ],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcSuffix'      => ['cn=log'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={0}syncprov,olcDatabase={2}hdb,cn=config') }
+          it { should contain_openldap('olcDatabase={3}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => [
+                '{0}to * by dn.exact="cn=replicator,dc=example,dc=com" read by * break',
+                '{1}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage',
+              ],
+              'olcDatabase'    => ['{3}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/data'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
+              'olcLimits'      => [
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+              ],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'      => ['secret'],
+              'olcSuffix'      => ['dc=example,dc=com'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={0}syncprov,olcDatabase={3}hdb,cn=config') }
+          it { should contain_openldap('olcOverlay={1}accesslog,olcDatabase={3}hdb,cn=config') }
+          it { should contain_openldap('olcOverlay={2}auditlog,olcDatabase={3}hdb,cn=config').with_attributes(
+            {
+              'objectClass'     => [
+                'olcOverlayConfig',
+                'olcAuditlogConfig',
+              ],
+              'olcOverlay'      => ['{2}auditlog'],
+              'olcAuditlogFile' => ['/tmp/auditlog.ldif'],
+            }
+          ) }
+
+          case facts[:osfamily]
+          when 'Debian'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_monitor.la',
+                  '{1}back_hdb.la',
+                  '{2}syncprov.la',
+                  '{3}accesslog.la',
+                  '{4}auditlog.la',
+                ],
+              }
+            ) }
+          when 'RedHat'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}syncprov.la',
+                  '{1}accesslog.la',
+                  '{2}auditlog.la',
                 ],
               }
             ) }

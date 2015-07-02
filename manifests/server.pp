@@ -8,6 +8,8 @@ class openldap::server (
   ],
   $accesslog           = false,
   $args_file           = $::openldap::params::args_file,
+  $auditlog            = false,
+  $auditlog_file       = $::openldap::params::auditlog_file,
   $backend_modules     = $::openldap::params::backend_modules,
   $data_directory      = $::openldap::params::data_directory,
   $db_backend          = $::openldap::params::db_backend,
@@ -49,6 +51,10 @@ class openldap::server (
 
   validate_array($access)
   validate_bool($accesslog)
+  validate_bool($auditlog)
+  if $auditlog {
+    validate_absolute_path($auditlog_file)
+  }
   validate_absolute_path($args_file)
   validate_array($backend_modules)
   validate_absolute_path($data_directory)

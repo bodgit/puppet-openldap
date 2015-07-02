@@ -200,6 +200,14 @@ be accessed by consumers.
 
 Where `slapd` writes out its command-line arguments.
 
+##### `auditlog`
+
+Setting this to `true` will enable the `auditlog` overlay.
+
+##### `auditlog_file`
+
+The LDIF file where the `auditlog` overlay writes any changes.
+
 ##### `backend_modules`
 
 An array of database backends that are built as modules and therefore require

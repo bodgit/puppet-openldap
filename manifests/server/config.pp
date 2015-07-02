@@ -85,6 +85,10 @@ class openldap::server::config {
     $::openldap::server::accesslog ? {
       true    => 'accesslog',
       default => '',
+    },
+    $::openldap::server::auditlog ? {
+      true    => 'auditlog',
+      default => '',
     }
   ]
 
@@ -288,6 +292,27 @@ class openldap::server::config {
         },
         require    => Openldap['cn=module{0},cn=config'],
       }
+
+      $overlay_index = 2
+    } else {
+      $overlay_index = 1
+    }
+  } else {
+    $overlay_index = 0
+  }
+
+  if $::openldap::server::auditlog {
+    openldap { "olcOverlay={${overlay_index}}auditlog,olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+      ensure     => present,
+      attributes => {
+        'objectClass'     => [
+          'olcOverlayConfig',
+          'olcAuditlogConfig',
+        ],
+        'olcOverlay'      => "{${overlay_index}}auditlog",
+        'olcAuditlogFile' => $::openldap::server::auditlog_file,
+      },
+      require    => Openldap['cn=module{0},cn=config'],
     }
   }
 }
