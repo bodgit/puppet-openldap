@@ -31,7 +31,7 @@ Would result in:
       item = [item]
     end
 
-    return item.collect.with_index { |x,i| "{#{i}}#{x}" }
+    return item.reject { |x| x.nil? or x.eql?('') }.collect.with_index { |x,i| "{#{i}}#{x}" }
   end
 end
 

@@ -238,6 +238,8 @@ class openldap::server::config {
     mode   => '0600',
   }
 
+  $syncrepl = openldap_values($::openldap::server::syncrepl)
+
   openldap { "olcDatabase={${db_index}}${db_backend},cn=config":
     ensure     => present,
     attributes => {
@@ -254,7 +256,7 @@ class openldap::server::config {
       'olcRootPW'      => $::openldap::server::root_password,
       'olcSuffix'      => $::openldap::server::suffix,
       # slave/consumer
-      'olcSyncrepl'    => $::openldap::server::syncrepl,
+      'olcSyncrepl'    => $syncrepl,
       'olcUpdateRef'   => $::openldap::server::update_ref,
     },
     require    => Openldap['cn=module{0},cn=config'],
