@@ -26,17 +26,27 @@ describe 'openldap::server' do
       include ::openldap
       include ::openldap::client
       class { '::openldap::server':
-        root_dn         => 'cn=Manager,dc=example,dc=com',
-        root_password   => 'secret',
-        suffix          => 'dc=example,dc=com',
-        access          => [
+        root_dn              => 'cn=Manager,dc=example,dc=com',
+        root_password        => 'secret',
+        suffix               => 'dc=example,dc=com',
+        access               => [
           'to attrs=userPassword by self =xw by anonymous auth',
           'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by users read',
         ],
-        auditlog        => true,
-        auditlog_file   => '/tmp/auditlog.ldif',
-        ldap_interfaces => ['#{default.ip}'],
-        local_ssf       => 256,
+        auditlog             => true,
+        auditlog_file        => '/tmp/auditlog.ldif',
+        data_cachesize       => 100,
+        data_checkpoint      => '1 1',
+        data_db_config       => [
+          'set_cachesize 0 2097152 0',
+          'set_lk_max_objects 1500',
+          'set_lk_max_locks 1500',
+          'set_lk_max_lockers 1500',
+        ],
+        data_dn_cachesize    => 100,
+        data_index_cachesize => 300,
+        ldap_interfaces      => ['#{default.ip}'],
+        local_ssf            => 256,
       }
       ::openldap::server::schema { 'cosine':
         position => 1,
@@ -107,5 +117,29 @@ describe 'openldap::server' do
     its(:content) { should match /^changetype: modify$/ }
     its(:content) { should match /^replace: userPassword$/ }
     its(:content) { should match /^userPassword:: e1NTSEF9/ }
+  end
+
+  describe file('/var/lib/ldap/data/DB_CONFIG') do
+    it { should be_file }
+    its(:content) { should eq <<-EOS.gsub(/^ +/, '') }
+      set_cachesize 0 2097152 0
+      set_lk_max_objects 1500
+      set_lk_max_locks 1500
+      set_lk_max_lockers 1500
+    EOS
+  end
+
+  describe command('db_stat -m -h /var/lib/ldap/data') do
+    its(:exit_status) { should eq 0 }
+    its(:stdout) { should match /^2MB 520KB\s+Total cache size$/ }
+    its(:stdout) { should match /^1\s+Number of caches$/ }
+    its(:stdout) { should match /^1\s+Maximum number of caches$/ }
+  end
+
+  describe command('db_stat -c -h /var/lib/ldap/data') do
+    its(:exit_status) { should eq 0 }
+    its(:stdout) { should match /^1500\s+Maximum number of locks possible$/ }
+    its(:stdout) { should match /^1500\s+Maximum number of lockers possible$/ }
+    its(:stdout) { should match /^1500\s+Maximum number of lock objects possible$/ }
   end
 end

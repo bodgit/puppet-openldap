@@ -184,8 +184,18 @@ describe 'openldap::server' do
           let(:params) do
             super().merge(
               {
-                :syncprov   => true,
-                :replica_dn => 'cn=replicator,dc=example,dc=com',
+                :data_cachesize       => 1500,
+                :data_checkpoint      => '1024 10',
+                :data_db_config       => [
+                  'set_cachesize 0 2097152 0',
+                  'set_lk_max_objects 1500',
+                  'set_lk_max_locks 1500',
+                  'set_lk_max_lockers 1500',
+                ],
+                :data_dn_cachesize    => 1500,
+                :data_index_cachesize => 4500,
+                :syncprov             => true,
+                :replica_dn           => 'cn=replicator,dc=example,dc=com',
               }
             )
           end
@@ -194,23 +204,33 @@ describe 'openldap::server' do
 
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
-              'objectClass'    => [
+              'objectClass'       => [
                 'olcDatabaseConfig',
                 'olcHdbConfig',
               ],
-              'olcAccess'      => [
+              'olcAccess'         => [
                 '{0}to * by dn.exact="cn=replicator,dc=example,dc=com" read by * break',
                 '{1}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage',
               ],
-              'olcDatabase'    => ['{2}hdb'],
-              'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
-              'olcLimits'      => [
+              'olcDatabase'       => ['{2}hdb'],
+              'olcDbCacheSize'    => ['1500'],
+              'olcDbCheckpoint'   => ['1024 10'],
+              'olcDbConfig'       => [
+                '{0}set_cachesize 0 2097152 0',
+                '{1}set_lk_max_objects 1500',
+                '{2}set_lk_max_locks 1500',
+                '{3}set_lk_max_lockers 1500',
+              ],
+              'olcDbDirectory'    => ['/var/lib/ldap/data'],
+              'olcDbDNcacheSize'  => ['1500'],
+              'olcDbIDLcacheSize' => ['4500'],
+              'olcDbIndex'        => ['entryCSN,entryUUID eq'],
+              'olcLimits'         => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
               ],
-              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
-              'olcRootPW'      => ['secret'],
-              'olcSuffix'      => ['dc=example,dc=com'],
+              'olcRootDN'         => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'         => ['secret'],
+              'olcSuffix'         => ['dc=example,dc=com'],
             }
           ) }
           it { should contain_openldap('olcOverlay={0}syncprov,olcDatabase={2}hdb,cn=config') }
@@ -408,11 +428,21 @@ describe 'openldap::server' do
           let(:params) do
             super().merge(
               {
-                :auditlog      => true,
-                :auditlog_file => '/tmp/auditlog.ldif',
-                :syncprov      => true,
-                :replica_dn    => 'cn=replicator,dc=example,dc=com',
-                :accesslog     => true,
+                :auditlog                  => true,
+                :auditlog_file             => '/tmp/auditlog.ldif',
+                :syncprov                  => true,
+                :replica_dn                => 'cn=replicator,dc=example,dc=com',
+                :accesslog                 => true,
+                :accesslog_cachesize       => 1500,
+                :accesslog_checkpoint      => '1024 10',
+                :accesslog_db_config       => [
+                  'set_cachesize 0 2097152 0',
+                  'set_lk_max_objects 1500',
+                  'set_lk_max_locks 1500',
+                  'set_lk_max_lockers 1500',
+                ],
+                :accesslog_dn_cachesize    => 1500,
+                :accesslog_index_cachesize => 4500,
               }
             )
           end
@@ -422,23 +452,33 @@ describe 'openldap::server' do
           it { should contain_file('/var/lib/ldap/log') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
-              'objectClass'    => [
+              'objectClass'       => [
                 'olcDatabaseConfig',
                 'olcHdbConfig',
               ],
-              'olcAccess'      => [
+              'olcAccess'         => [
                 '{0}to * by dn.exact="cn=replicator,dc=example,dc=com" read',
               ],
-              'olcDatabase'    => ['{2}hdb'],
-              'olcDbDirectory' => ['/var/lib/ldap/log'],
-              'olcDbIndex'     => [
+              'olcDatabase'       => ['{2}hdb'],
+              'olcDbCacheSize'    => ['1500'],
+              'olcDbCheckpoint'   => ['1024 10'],
+              'olcDbConfig'       => [
+                '{0}set_cachesize 0 2097152 0',
+                '{1}set_lk_max_objects 1500',
+                '{2}set_lk_max_locks 1500',
+                '{3}set_lk_max_lockers 1500',
+              ],
+              'olcDbDirectory'    => ['/var/lib/ldap/log'],
+              'olcDbDNcacheSize'  => ['1500'],
+              'olcDbIDLcacheSize' => ['4500'],
+              'olcDbIndex'        => [
                 'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
               ],
-              'olcLimits'      => [
+              'olcLimits'         => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
               ],
-              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
-              'olcSuffix'      => ['cn=log'],
+              'olcRootDN'         => ['cn=Manager,dc=example,dc=com'],
+              'olcSuffix'         => ['cn=log'],
             }
           ) }
           it { should contain_openldap('olcOverlay={0}syncprov,olcDatabase={2}hdb,cn=config') }

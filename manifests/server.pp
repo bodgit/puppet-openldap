@@ -3,42 +3,51 @@ class openldap::server (
   $root_dn,
   $root_password,
   $suffix,
-  $access              = [
+  $access                    = [
     'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage', # lint:ignore:80chars
   ],
-  $accesslog           = false,
-  $args_file           = $::openldap::params::args_file,
-  $auditlog            = false,
-  $auditlog_file       = $::openldap::params::auditlog_file,
-  $backend_modules     = $::openldap::params::backend_modules,
-  $data_directory      = $::openldap::params::data_directory,
-  $db_backend          = $::openldap::params::db_backend,
-  #$db_config           = $::openldap::params::db_config,
-  $group               = $::openldap::params::group,
-  $indices             = undef,
-  $ldap_interfaces     = $::openldap::params::ldap_interfaces,
-  $ldaps_interfaces    = $::openldap::params::ldaps_interfaces,
-  $limits              = [],
-  $local_ssf           = undef,
-  $module_extension    = $::openldap::params::module_extension,
-  $package_name        = $::openldap::params::server_package_name,
-  $pid_file            = $::openldap::params::pid_file,
-  $replica_dn          = undef,
-  $schema_dir          = $::openldap::params::schema_dir,
-  $security            = undef,
-  $ssl_ca              = $::openldap::params::ssl_ca,
-  $ssl_cert            = $::openldap::params::ssl_cert,
-  $ssl_certs_dir       = $::openldap::params::ssl_certs_dir,
-  $ssl_cipher          = $::openldap::params::ssl_cipher,
-  $ssl_dhparam         = $::openldap::params::ssl_dhparam,
-  $ssl_key             = $::openldap::params::ssl_key,
-  $ssl_protocol        = $::openldap::params::ssl_protocol,
-  $syncprov            = false,
-  $syncprov_checkpoint = $::openldap::params::syncprov_checkpoint,
-  $syncprov_sessionlog = $::openldap::params::syncprov_sessionlog,
-  $syncrepl            = undef,
-  $update_ref          = undef,
-  $user                = $::openldap::params::user,
+  $accesslog                 = false,
+  $accesslog_cachesize       = undef,
+  $accesslog_checkpoint      = undef,
+  $accesslog_db_config       = [],
+  $accesslog_dn_cachesize    = undef,
+  $accesslog_index_cachesize = undef,
+  $args_file                 = $::openldap::params::args_file,
+  $auditlog                  = false,
+  $auditlog_file             = $::openldap::params::auditlog_file,
+  $backend_modules           = $::openldap::params::backend_modules,
+  $data_cachesize            = undef,
+  $data_checkpoint           = undef,
+  $data_db_config            = [],
+  $data_directory            = $::openldap::params::data_directory,
+  $data_dn_cachesize         = undef,
+  $data_index_cachesize      = undef,
+  $db_backend                = $::openldap::params::db_backend,
+  $group                     = $::openldap::params::group,
+  $indices                   = undef,
+  $ldap_interfaces           = $::openldap::params::ldap_interfaces,
+  $ldaps_interfaces          = $::openldap::params::ldaps_interfaces,
+  $limits                    = [],
+  $local_ssf                 = undef,
+  $module_extension          = $::openldap::params::module_extension,
+  $package_name              = $::openldap::params::server_package_name,
+  $pid_file                  = $::openldap::params::pid_file,
+  $replica_dn                = undef,
+  $schema_dir                = $::openldap::params::schema_dir,
+  $security                  = undef,
+  $ssl_ca                    = $::openldap::params::ssl_ca,
+  $ssl_cert                  = $::openldap::params::ssl_cert,
+  $ssl_certs_dir             = $::openldap::params::ssl_certs_dir,
+  $ssl_cipher                = $::openldap::params::ssl_cipher,
+  $ssl_dhparam               = $::openldap::params::ssl_dhparam,
+  $ssl_key                   = $::openldap::params::ssl_key,
+  $ssl_protocol              = $::openldap::params::ssl_protocol,
+  $syncprov                  = false,
+  $syncprov_checkpoint       = $::openldap::params::syncprov_checkpoint,
+  $syncprov_sessionlog       = $::openldap::params::syncprov_sessionlog,
+  $syncrepl                  = undef,
+  $update_ref                = undef,
+  $user                      = $::openldap::params::user,
 ) inherits ::openldap::params {
 
   if ! defined(Class['::openldap::client']) {
@@ -51,13 +60,39 @@ class openldap::server (
 
   validate_array($access)
   validate_bool($accesslog)
+  if $accesslog_cachesize {
+    validate_integer($accesslog_cachesize)
+  }
+  if $accesslog_checkpoint {
+    validate_re($accesslog_checkpoint, '^\d+\s+\d+$')
+  }
+  validate_array($accesslog_db_config)
+  if $accesslog_dn_cachesize {
+    validate_integer($accesslog_dn_cachesize)
+  }
+  if $accesslog_index_cachesize {
+    validate_integer($accesslog_index_cachesize)
+  }
   validate_bool($auditlog)
   if $auditlog {
     validate_absolute_path($auditlog_file)
   }
   validate_absolute_path($args_file)
   validate_array($backend_modules)
+  if $data_cachesize {
+    validate_integer($data_cachesize)
+  }
+  if $data_checkpoint {
+    validate_re($data_checkpoint, '^\d+\s+\d+$')
+  }
+  validate_array($data_db_config)
   validate_absolute_path($data_directory)
+  if $data_dn_cachesize {
+    validate_integer($data_dn_cachesize)
+  }
+  if $data_index_cachesize {
+    validate_integer($data_index_cachesize)
+  }
   validate_string($db_backend)
   validate_string($group)
   if $indices {

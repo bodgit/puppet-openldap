@@ -196,6 +196,36 @@ It will create a separate database with the suffix `cn=log` and use the value
 of the `replica_dn` parameter much like the `syncprov` setting to allow it to
 be accessed by consumers.
 
+##### `accesslog_cachesize`
+
+Specify the size of the in-memory entry cache maintained by the `bdb` or
+`hdb` backends for the database used by the `accesslog` overlay. See the
+`olcDbCacheSize` attribute.
+
+##### `accesslog_checkpoint`
+
+Specify the frequency for checkpointing the transaction log of the database
+used by the `accesslog` overlay. This is specified in the same form as the
+`olcDbCheckpoint` attribute.
+
+##### `accesslog_db_config`
+
+An array of lines in the same form as the `olcDbConfig` attribute to tune the
+database used by the `accesslog` overlay. This results in creating a
+`DB_CONFIG` file for the database if the backend is either `bdb` or `hdb`.
+
+##### `accesslog_dn_cachesize`
+
+Specify the size of the in-memory DN cache maintained by the `bdb` or
+`hdb` backends for the database used by the `accesslog` overlay. See the
+`olcDbDNcacheSize` attribute.
+
+##### `accesslog_index_cachesize`
+
+Specify the size of the in-memory index cache maintained by the `bdb` or
+`hdb` backends for the database used by the `accesslog` overlay. See the
+`olcDbIDLcacheSize` attribute.
+
 ##### `args_file`
 
 Where `slapd` writes out its command-line arguments.
@@ -213,11 +243,38 @@ The LDIF file where the `auditlog` overlay writes any changes.
 An array of database backends that are built as modules and therefore require
 loading before use.
 
+##### `data_cachesize`
+
+Specify the size of the in-memory entry cache maintained by the `bdb` or
+`hdb` backends for the main database. See the `olcDbCacheSize` attribute.
+
+##### `data_checkpoint`
+
+Specify the frequency for checkpointing the transaction log of the main
+database. This is specified in the same form as the `olcDbCheckpoint`
+attribute.
+
+##### `data_db_config`
+
+An array of lines in the same form as the `olcDbConfig` attribute to tune the
+main database. This results in creating a `DB_CONFIG` file for the database
+if the backend is either `bdb` or `hdb`.
+
 ##### `data_directory`
 
 The base directory used for database storage. Rather than store one database
 at the top level, this module creates a sub-directory per-database. Any
 unmanaged files in the top-level directory will be purged.
+
+##### `data_dn_cachesize`
+
+Specify the size of the in-memory index cache maintained by the `bdb` or
+`hdb` backends for the main database. See the `olcDbDNcacheSize` attribute.
+
+##### `data_index_cachesize`
+
+Specify the size of the in-memory index cache maintained by the `bdb` or
+`hdb` backends for the main database. See the `olcDbIDLcacheSize` attribute.
 
 ##### `db_backend`
 

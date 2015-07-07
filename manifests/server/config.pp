@@ -177,19 +177,24 @@ class openldap::server::config {
       openldap { "olcDatabase={2}${db_backend},cn=config":
         ensure     => present,
         attributes => {
-          'objectClass'    => [
+          'objectClass'       => [
             'olcDatabaseConfig',
             $object_class,
           ],
-          'olcAccess'      => openldap_values($replica_access),
-          'olcDatabase'    => "{2}${db_backend}",
-          'olcDbDirectory' => "${data_directory}/log",
-          'olcDbIndex'     => [
+          'olcAccess'         => openldap_values($replica_access),
+          'olcDatabase'       => "{2}${db_backend}",
+          'olcDbCacheSize'    => $::openldap::server::accesslog_cachesize,
+          'olcDbCheckpoint'   => $::openldap::server::accesslog_checkpoint,
+          'olcDbConfig'       => openldap_values($::openldap::server::accesslog_db_config), # lint:ignore:80chars
+          'olcDbDirectory'    => "${data_directory}/log",
+          'olcDbDNcacheSize'  => $::openldap::server::accesslog_dn_cachesize,
+          'olcDbIDLcacheSize' => $::openldap::server::accesslog_index_cachesize,
+          'olcDbIndex'        => [
             'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
           ],
-          'olcLimits'      => openldap_values($replica_limits),
-          'olcRootDN'      => $::openldap::server::root_dn,
-          'olcSuffix'      => 'cn=log',
+          'olcLimits'         => openldap_values($replica_limits),
+          'olcRootDN'         => $::openldap::server::root_dn,
+          'olcSuffix'         => 'cn=log',
         },
         require    => Openldap['cn=module{0},cn=config'],
       }
@@ -238,26 +243,29 @@ class openldap::server::config {
     mode   => '0600',
   }
 
-  $syncrepl = openldap_values($::openldap::server::syncrepl)
-
   openldap { "olcDatabase={${db_index}}${db_backend},cn=config":
     ensure     => present,
     attributes => {
-      'objectClass'    => [
+      'objectClass'       => [
         'olcDatabaseConfig',
         $object_class,
       ],
-      'olcAccess'      => openldap_values($access),
-      'olcDatabase'    => "{${db_index}}${db_backend}",
-      'olcDbDirectory' => "${data_directory}/data",
-      'olcDbIndex'     => $indices,
-      'olcLimits'      => openldap_values($limits),
-      'olcRootDN'      => $::openldap::server::root_dn,
-      'olcRootPW'      => $::openldap::server::root_password,
-      'olcSuffix'      => $::openldap::server::suffix,
+      'olcAccess'         => openldap_values($access),
+      'olcDatabase'       => "{${db_index}}${db_backend}",
+      'olcDbCacheSize'    => $::openldap::server::data_cachesize,
+      'olcDbCheckpoint'   => $::openldap::server::data_checkpoint,
+      'olcDbConfig'       => openldap_values($::openldap::server::data_db_config), # lint:ignore:80chars
+      'olcDbDirectory'    => "${data_directory}/data",
+      'olcDbDNcacheSize'  => $::openldap::server::data_dn_cachesize,
+      'olcDbIDLcacheSize' => $::openldap::server::data_index_cachesize,
+      'olcDbIndex'        => $indices,
+      'olcLimits'         => openldap_values($limits),
+      'olcRootDN'         => $::openldap::server::root_dn,
+      'olcRootPW'         => $::openldap::server::root_password,
+      'olcSuffix'         => $::openldap::server::suffix,
       # slave/consumer
-      'olcSyncrepl'    => $syncrepl,
-      'olcUpdateRef'   => $::openldap::server::update_ref,
+      'olcSyncrepl'       => openldap_values($::openldap::server::syncrepl),
+      'olcUpdateRef'      => $::openldap::server::update_ref,
     },
     require    => Openldap['cn=module{0},cn=config'],
   }
