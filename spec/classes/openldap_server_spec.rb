@@ -576,7 +576,7 @@ describe 'openldap::server' do
               'olcRootPW'      => ['secret'],
               'olcSuffix'      => ['dc=example,dc=com'],
               'olcSyncrepl'    => ['{0}rid=001 provider=ldap://ldap.example.com/'],
-              'olcUpdateRef'   => ['ldap://ldap.example.com/'],
+              'olcUpdateRef'   => ['{0}ldap://ldap.example.com/'],
             }
           ) }
 
