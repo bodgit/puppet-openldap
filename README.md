@@ -320,7 +320,7 @@ The extension module files have, normally `.la`.
 
 ##### `package_name`
 
-The name of the package to install that provides the LDAP client utilities.
+The name of the package to install that provides the LDAP `slapd` daemon.
 
 ##### `pid_file`
 
