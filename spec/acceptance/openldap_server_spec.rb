@@ -3,9 +3,13 @@ require 'spec_helper_acceptance'
 describe 'openldap::server' do
   case fact('osfamily')
   when 'RedHat'
+    db_package   = 'libdb-utils'
+    db_stat      = 'db_stat'
     package_name = 'openldap-servers'
     service_name = 'slapd'
   when 'Debian'
+    db_package   = 'db5.3-util'
+    db_stat      = 'db5.3_stat'
     package_name = 'slapd'
     service_name = 'slapd'
   end
@@ -56,6 +60,28 @@ describe 'openldap::server' do
       }
       ::openldap::server::schema { 'nis':
         position => 3,
+      }
+      package { '#{db_package}':
+        ensure => present,
+      }
+      case $::osfamily {
+        'Debian': {
+          service { 'apparmor':
+            ensure     => running,
+            enable     => true,
+            hasstatus  => true,
+            hasrestart => true,
+            before     => Class['::openldap::server'],
+          }
+          file { '/etc/apparmor.d/local/usr.sbin.slapd':
+            ensure  => file,
+            owner   => 0,
+            group   => 0,
+            mode    => '0600',
+            content => "/tmp/* kw,\n",
+            notify  => Service['apparmor'],
+          }
+        }
       }
     EOS
 
@@ -129,14 +155,14 @@ describe 'openldap::server' do
     EOS
   end
 
-  describe command('db_stat -m -h /var/lib/ldap/data') do
+  describe command("#{db_stat} -m -h /var/lib/ldap/data") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should match /^2MB 520KB\s+Total cache size$/ }
     its(:stdout) { should match /^1\s+Number of caches$/ }
     its(:stdout) { should match /^1\s+Maximum number of caches$/ }
   end
 
-  describe command('db_stat -c -h /var/lib/ldap/data') do
+  describe command("#{db_stat} -c -h /var/lib/ldap/data") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should match /^1500\s+Maximum number of locks possible$/ }
     its(:stdout) { should match /^1500\s+Maximum number of lockers possible$/ }
