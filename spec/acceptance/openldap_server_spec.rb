@@ -3,15 +3,19 @@ require 'spec_helper_acceptance'
 describe 'openldap::server' do
   case fact('osfamily')
   when 'RedHat'
-    db_package   = 'libdb-utils'
-    db_stat      = 'db_stat'
-    package_name = 'openldap-servers'
-    service_name = 'slapd'
+    db_package    = 'libdb-utils'
+    db_stat       = 'db_stat'
+    package_name  = 'openldap-servers'
+    samba_package = 'samba'
+    samba_schema  = '/usr/share/doc/samba-4.1.12/LDAP/samba.ldif'
+    service_name  = 'slapd'
   when 'Debian'
-    db_package   = 'db5.3-util'
-    db_stat      = 'db5.3_stat'
-    package_name = 'slapd'
-    service_name = 'slapd'
+    db_package    = 'db5.3-util'
+    db_stat       = 'db5.3_stat'
+    package_name  = 'slapd'
+    samba_package = 'samba'
+    samba_schema  = '/usr/share/doc/samba/examples/LDAP/samba.ldif'
+    service_name  = 'slapd'
   end
 
   it 'should work with no errors' do
@@ -35,6 +39,7 @@ describe 'openldap::server' do
         suffix               => 'dc=example,dc=com',
         access               => [
           'to attrs=userPassword by self =xw by anonymous auth',
+          'to attrs=sambaLMPassword,sambaNTPassword by self =w',
           'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by users read',
         ],
         auditlog             => true,
@@ -51,6 +56,8 @@ describe 'openldap::server' do
         data_index_cachesize => 300,
         ldap_interfaces      => ['#{default.ip}'],
         local_ssf            => 256,
+        smbk5pwd             => true,
+        smbk5pwd_backends    => ['samba'],
       }
       ::openldap::server::schema { 'cosine':
         position => 1,
@@ -60,6 +67,13 @@ describe 'openldap::server' do
       }
       ::openldap::server::schema { 'nis':
         position => 3,
+      }
+      package { '#{samba_package}':
+        ensure => present,
+      }
+      ::openldap::server::schema { 'samba':
+        ldif     => '#{samba_schema}',
+        position => 4,
       }
       package { '#{db_package}':
         ensure => present,
@@ -81,12 +95,29 @@ describe 'openldap::server' do
             content => "/tmp/* kw,\n",
             notify  => Service['apparmor'],
           }
+          exec { 'gzip -d #{samba_schema}.gz':
+            path    => ['/bin', '/usr/bin'],
+            creates => '#{samba_schema}',
+            require => Package['#{samba_package}'],
+            before  => ::Openldap::Server::Schema['samba'],
+          }
+        }
+        'RedHat': {
+          Package['#{samba_package}'] -> ::Openldap::Server::Schema['samba']
         }
       }
     EOS
 
     apply_manifest(pp, :catch_failures => true)
     apply_manifest(pp, :catch_changes  => true)
+  end
+
+  describe package(samba_package) do
+    it { should be_installed }
+  end
+
+  describe file(samba_schema) do
+    it { should be_file }
   end
 
   describe package(package_name) do
@@ -108,11 +139,13 @@ describe 'openldap::server' do
         dn: cn={1}cosine,cn=schema,cn=config
         dn: cn={2}inetorgperson,cn=schema,cn=config
         dn: cn={3}nis,cn=schema,cn=config
+        dn: cn={4}samba,cn=schema,cn=config
         dn: olcDatabase={-1}frontend,cn=config
         dn: olcDatabase={0}config,cn=config
         dn: olcDatabase={1}monitor,cn=config
         dn: olcDatabase={2}hdb,cn=config
         dn: olcOverlay={0}auditlog,olcDatabase={2}hdb,cn=config
+        dn: olcOverlay={1}smbk5pwd,olcDatabase={2}hdb,cn=config
       EOS
     end
   end
@@ -130,6 +163,8 @@ describe 'openldap::server' do
   describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w password") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should_not match /^userPassword/ }
+    its(:stdout) { should_not match /^sambaLMPassword/ }
+    its(:stdout) { should_not match /^sambaNTPassword/ }
   end
 
   # Test password change
@@ -137,12 +172,25 @@ describe 'openldap::server' do
     its(:exit_status) { should eq 0 }
   end
 
-  # Test password modification made it into the audit log
+  # Test that TCP works, binds work, and that no password hashes are disclosed
+  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w secret") do
+    its(:exit_status) { should eq 0 }
+    its(:stdout) { should_not match /^userPassword/ }
+    its(:stdout) { should_not match /^sambaLMPassword/ }
+    its(:stdout) { should_not match /^sambaNTPassword/ }
+  end
+
+  # Test password modification made it into the audit log including the
+  # associated changes of the Samba hashes via the smbk5pwd overlay
   describe file('/tmp/auditlog.ldif') do
     it { should be_file }
     its(:content) { should match /^changetype: modify$/ }
     its(:content) { should match /^replace: userPassword$/ }
     its(:content) { should match /^userPassword:: e1NTSEF9/ }
+    its(:content) { should match /^replace: sambaLMPassword$/ }
+    its(:content) { should match /^sambaLMPassword: / }
+    its(:content) { should match /^replace: sambaNTPassword$/ }
+    its(:content) { should match /^sambaNTPassword: / }
   end
 
   describe file('/var/lib/ldap/data/DB_CONFIG') do
@@ -153,6 +201,10 @@ describe 'openldap::server' do
       set_lk_max_locks 1500
       set_lk_max_lockers 1500
     EOS
+  end
+
+  describe package(db_package) do
+    it { should be_installed }
   end
 
   describe command("#{db_stat} -m -h /var/lib/ldap/data") do

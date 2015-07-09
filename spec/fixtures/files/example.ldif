@@ -18,6 +18,7 @@ dn: uid=alice,ou=people,dc=example,dc=com
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: shadowAccount
+objectClass: sambaSamAccount
 uid: alice
 sn: Example
 givenName: Alice
@@ -36,4 +37,5 @@ shadowMin: 8
 shadowMax: 999999
 shadowLastChange: 10877
 mail: alice@example.com
+sambaSID: S-1-0-0-3000
 

@@ -27,22 +27,20 @@ class openldap::params {
         'perl',
         'relay',
         'shell',
-        'sock'
+        'sock',
       ]
       $base_package_name   = 'openldap'
-      $conf_dir            = '/etc/openldap'
-      $ldap_conf_file      = "${conf_dir}/ldap.conf"
       $client_package_name = 'openldap-clients'
+      $conf_dir            = '/etc/openldap'
       $data_directory      = '/var/lib/ldap'
       $db_backend          = 'hdb'
       $group               = 'ldap'
+      $ldap_conf_file      = "${conf_dir}/ldap.conf"
+      $overlay_packages    = {}
       $pid_file            = '/var/run/openldap/slapd.pid'
       $schema_dir          = "${conf_dir}/schema"
       $server_package_name = 'openldap-servers'
       $server_service_name = 'slapd'
-      $overlay_packages    = {
-        'smbk5pwd' => $server_package_name,
-      }
       $user                = 'ldap'
     }
     'Debian': {
@@ -61,22 +59,22 @@ class openldap::params {
         'relay',
         'shell',
         'sock',
-        'sql'
+        'sql',
       ]
       $base_package_name   = 'libldap-2.4-2'
-      $conf_dir            = '/etc/ldap'
-      $ldap_conf_file      = "${conf_dir}/ldap.conf"
       $client_package_name = 'ldap-utils'
+      $conf_dir            = '/etc/ldap'
       $data_directory      = '/var/lib/ldap'
       $db_backend          = 'hdb'
       $group               = 'openldap'
+      $ldap_conf_file      = "${conf_dir}/ldap.conf"
+      $overlay_packages    = {
+        'smbk5pwd' => 'slapd-smbk5pwd',
+      }
       $pid_file            = '/var/run/slapd/slapd.pid'
       $schema_dir          = "${conf_dir}/schema"
       $server_package_name = 'slapd'
       $server_service_name = 'slapd'
-      $overlay_packages    = {
-        'smbk5pwd' => 'slapd-smbk5pwd',
-      }
       $user                = 'openldap'
     }
     default: {

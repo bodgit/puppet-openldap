@@ -6,6 +6,7 @@ class openldap::server::config {
   $db_backend       = $::openldap::server::db_backend
   $group            = $::openldap::server::group
   $module_extension = $::openldap::server::module_extension
+  $overlay_packages = $::openldap::server::overlay_packages
   $replica_dn       = $::openldap::server::replica_dn
   $user             = $::openldap::server::user
 
@@ -69,15 +70,7 @@ class openldap::server::config {
     },
   }
 
-  $module_candidates = [
-    member($backend_modules, 'monitor') ? {
-      true    => 'back_monitor',
-      default => '',
-    },
-    member($backend_modules, $db_backend) ? {
-      true    => "back_${db_backend}",
-      default => '',
-    },
+  $overlay_candidates = [
     $::openldap::server::syncprov ? {
       true    => 'syncprov',
       default => '',
@@ -89,10 +82,37 @@ class openldap::server::config {
     $::openldap::server::auditlog ? {
       true    => 'auditlog',
       default => '',
+    },
+    $::openldap::server::smbk5pwd ? {
+      true    => 'smbk5pwd',
+      default => '',
     }
   ]
 
-  $modules = reject($module_candidates, '^\s*$')
+  $overlays = reject($overlay_candidates, '^\s*$')
+
+  # Creates a hash based on the enabled overlays pointing to their intended
+  # position on the database. So for example if only the 'syncprov' and
+  # 'smbk5pwd' overlays are enabled it results in the following:
+  #
+  # {
+  #   syncprov  => '{0}syncprov',
+  #   smbk5pwd  => '{1}smbk5pwd',
+  # }
+  $overlay_index = hash(flatten(zip($overlays, openldap_values($overlays))))
+
+  $backend_candidates = [
+    member($backend_modules, 'monitor') ? {
+      true    => 'back_monitor',
+      default => '',
+    },
+    member($backend_modules, $db_backend) ? {
+      true    => "back_${db_backend}",
+      default => '',
+    },
+  ]
+
+  $modules = flatten([reject($backend_candidates, '^\s*$'), $overlays])
 
   # Convert ['module1', 'module2'] into ['{0}module1.la', '{1}module2.la']
   $module_load = suffix(openldap_values($modules), $module_extension)
@@ -271,14 +291,14 @@ class openldap::server::config {
   }
 
   if $::openldap::server::syncprov {
-    openldap { "olcOverlay={0}syncprov,olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+    openldap { "olcOverlay=${overlay_index['syncprov']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
       ensure     => present,
       attributes => {
         'objectClass'     => [
           'olcOverlayConfig',
           'olcSyncProvConfig',
         ],
-        'olcOverlay'      => '{0}syncprov',
+        'olcOverlay'      => $overlay_index['syncprov'],
         'olcSpCheckpoint' => $::openldap::server::syncprov_checkpoint,
         'olcSpReloadHint' => 'TRUE',
         'olcSpSessionlog' => $::openldap::server::syncprov_sessionlog,
@@ -287,14 +307,14 @@ class openldap::server::config {
     }
 
     if $::openldap::server::accesslog {
-      openldap { "olcOverlay={1}accesslog,olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+      openldap { "olcOverlay=${overlay_index['accesslog']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
         ensure     => present,
         attributes => {
           'objectClass'         => [
             'olcOverlayConfig',
             'olcAccessLogConfig',
           ],
-          'olcOverlay'          => '{1}accesslog',
+          'olcOverlay'          => $overlay_index['accesslog'],
           'olcAccessLogDB'      => 'cn=log',
           'olcAccessLogOps'     => 'writes',
           'olcAccessLogSuccess' => 'TRUE',
@@ -302,25 +322,44 @@ class openldap::server::config {
         },
         require    => Openldap['cn=module{0},cn=config'],
       }
-
-      $overlay_index = 2
-    } else {
-      $overlay_index = 1
     }
-  } else {
-    $overlay_index = 0
   }
 
   if $::openldap::server::auditlog {
-    openldap { "olcOverlay={${overlay_index}}auditlog,olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+    openldap { "olcOverlay=${overlay_index['auditlog']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
       ensure     => present,
       attributes => {
         'objectClass'     => [
           'olcOverlayConfig',
           'olcAuditlogConfig',
         ],
-        'olcOverlay'      => "{${overlay_index}}auditlog",
+        'olcOverlay'      => $overlay_index['auditlog'],
         'olcAuditlogFile' => $::openldap::server::auditlog_file,
+      },
+      require    => Openldap['cn=module{0},cn=config'],
+    }
+  }
+
+  if $::openldap::server::smbk5pwd {
+
+    # Install the package before we try and load the module
+    if has_key($overlay_packages, 'smbk5pwd') {
+      package { $overlay_packages['smbk5pwd']:
+        ensure => present,
+        before => Openldap['cn=module{0},cn=config'],
+      }
+    }
+
+    openldap { "olcOverlay=${overlay_index['smbk5pwd']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+      ensure     => present,
+      attributes => {
+        'objectClass'           => [
+          'olcOverlayConfig',
+          'olcSmbK5PwdConfig',
+        ],
+        'olcOverlay'            => $overlay_index['smbk5pwd'],
+        'olcSmbK5PwdEnable'     => $::openldap::server::smbk5pwd_backends,
+        'olcSmbK5PwdMustChange' => $::openldap::server::smbk5pwd_must_change,
       },
       require    => Openldap['cn=module{0},cn=config'],
     }

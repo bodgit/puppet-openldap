@@ -342,6 +342,27 @@ used as a default by the
 Specify minimum security strength factors in the same form as the
 `olcSecurity` attribute.
 
+##### `smbk5pwd`
+
+Setting this to `true` will enable the `smbk5pwd` overlay. In order to add this
+overlay to the database, the schema files for any enabled backends also need to
+be loaded. Both Red Hat and Debian/Ubuntu enable the Samba backend by default
+which requires the Samba schema. Debian/Ubuntu additionally enable the Kerberos
+backend which requires the Heimdal KDC/HDB schema and also `slapd` will need to
+be able to access the KDC master key (`m-key`) file.
+
+##### `smbk5pwd_backends`
+
+By default, all backends compiled into the overlay are enabled. Pass in an
+array of backends to enable only some of them. This affects which schemas
+need to be loaded and any additional setup steps. This maps to the
+`olcSmbK5PwdEnable` attribute.
+
+##### `smbk5pwd_must_change`
+
+Maps to the `olcSmbK5PwdMustChange` attribute controlling how long until Samba
+passwords expire after a password change.
+
 ##### `ssl_ca`
 
 Maps to the `olcTLSCACertificateFile` attribute.
@@ -793,6 +814,49 @@ class { '::openldap::server':
 }
 ::openldap::server::schema { 'nis':
   position => 3,
+}
+```
+
+Extend the standalone example with support for synchronising passwords between
+POSIX and Samba:
+
+```puppet
+include ::openldap
+include ::openldap::client
+
+class { '::openldap::server':
+  root_dn           => 'cn=Manager,dc=example,dc=com',
+  root_password     => '{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY',
+  suffix            => 'dc=example,dc=com',
+  access            => [
+    'to attrs=userPassword by self =xw by anonymous auth',
+    'to attrs=sambaLMPassword,sambaNTPassword by self =w',
+    'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by self write by users read',
+  ],
+  indices           => [
+    'objectClass eq,pres',
+    'ou,cn,mail,surname,givenname eq,pres,sub',
+  ],
+  ldap_interfaces   => [$ipaddress],
+  smbk5pwd          => true,
+  smbk5pwd_backends => ['samba'],
+}
+::openldap::server::schema { 'cosine':
+  position => 1,
+}
+::openldap::server::schema { 'inetorgperson':
+  position => 2,
+}
+::openldap::server::schema { 'nis':
+  position => 3,
+}
+package { 'samba':
+  ensure => present,
+}
+::openldap::server::schema { 'samba':
+  ldif     => '/usr/share/doc/samba-4.1.12/LDAP/samba.ldif',
+  position => 4,
+  require  => Package['samba'],
 }
 ```
 

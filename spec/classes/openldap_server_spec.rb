@@ -182,6 +182,68 @@ describe 'openldap::server' do
           end
         end
 
+        context 'with smbk5pwd enabled', :compile do
+          let(:params) do
+            super().merge(
+              {
+                :smbk5pwd => true,
+              }
+            )
+          end
+
+          it_behaves_like "openldap::server on #{facts[:osfamily]}"
+
+          it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage'],
+              'olcDatabase'    => ['{2}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/data'],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'      => ['secret'],
+              'olcSuffix'      => ['dc=example,dc=com'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={0}smbk5pwd,olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'     => [
+                'olcOverlayConfig',
+                'olcSmbK5PwdConfig',
+              ],
+              'olcOverlay'      => ['{0}smbk5pwd'],
+            }
+          ) }
+
+          case facts[:osfamily]
+          when 'Debian'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_monitor.la',
+                  '{1}back_hdb.la',
+                  '{2}smbk5pwd.la',
+                ],
+              }
+            ) }
+            it { should contain_package('slapd-smbk5pwd').with_before('Openldap[cn=module{0},cn=config]') }
+          when 'RedHat'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}smbk5pwd.la',
+                ],
+              }
+            ) }
+          end
+        end
+
         context 'with syncrepl enabled', :compile do
           let(:params) do
             super().merge(
@@ -542,6 +604,147 @@ describe 'openldap::server' do
                   '{0}syncprov.la',
                   '{1}accesslog.la',
                   '{2}auditlog.la',
+                ],
+              }
+            ) }
+          end
+        end
+
+        context 'with delta-syncrepl, auditlog and smbk5pwd enabled', :compile do
+          let(:params) do
+            super().merge(
+              {
+                :accesslog                 => true,
+                :accesslog_cachesize       => 1500,
+                :accesslog_checkpoint      => '1024 10',
+                :accesslog_db_config       => [
+                  'set_cachesize 0 2097152 0',
+                  'set_lk_max_objects 1500',
+                  'set_lk_max_locks 1500',
+                  'set_lk_max_lockers 1500',
+                ],
+                :accesslog_dn_cachesize    => 1500,
+                :accesslog_index_cachesize => 4500,
+                :auditlog                  => true,
+                :auditlog_file             => '/tmp/auditlog.ldif',
+                :smbk5pwd                  => true,
+                :smbk5pwd_backends         => [
+                  'samba'
+                ],
+                :smbk5pwd_must_change      => 2592000,
+                :syncprov                  => true,
+                :replica_dn                => 'cn=replicator,dc=example,dc=com',
+              }
+            )
+          end
+
+          it_behaves_like "openldap::server on #{facts[:osfamily]}"
+
+          it { should contain_file('/var/lib/ldap/log') }
+          it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'       => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'         => [
+                '{0}to * by dn.exact="cn=replicator,dc=example,dc=com" read',
+              ],
+              'olcDatabase'       => ['{2}hdb'],
+              'olcDbCacheSize'    => ['1500'],
+              'olcDbCheckpoint'   => ['1024 10'],
+              'olcDbConfig'       => [
+                '{0}set_cachesize 0 2097152 0',
+                '{1}set_lk_max_objects 1500',
+                '{2}set_lk_max_locks 1500',
+                '{3}set_lk_max_lockers 1500',
+              ],
+              'olcDbDirectory'    => ['/var/lib/ldap/log'],
+              'olcDbDNcacheSize'  => ['1500'],
+              'olcDbIDLcacheSize' => ['4500'],
+              'olcDbIndex'        => [
+                'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
+              ],
+              'olcLimits'         => [
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+              ],
+              'olcRootDN'         => ['cn=Manager,dc=example,dc=com'],
+              'olcSuffix'         => ['cn=log'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={0}syncprov,olcDatabase={2}hdb,cn=config') }
+          it { should contain_openldap('olcDatabase={3}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => [
+                '{0}to * by dn.exact="cn=replicator,dc=example,dc=com" read by * break',
+                '{1}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage',
+              ],
+              'olcDatabase'    => ['{3}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/data'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
+              'olcLimits'      => [
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+              ],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'      => ['secret'],
+              'olcSuffix'      => ['dc=example,dc=com'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={0}syncprov,olcDatabase={3}hdb,cn=config') }
+          it { should contain_openldap('olcOverlay={1}accesslog,olcDatabase={3}hdb,cn=config') }
+          it { should contain_openldap('olcOverlay={2}auditlog,olcDatabase={3}hdb,cn=config').with_attributes(
+            {
+              'objectClass'     => [
+                'olcOverlayConfig',
+                'olcAuditlogConfig',
+              ],
+              'olcOverlay'      => ['{2}auditlog'],
+              'olcAuditlogFile' => ['/tmp/auditlog.ldif'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={3}smbk5pwd,olcDatabase={3}hdb,cn=config').with_attributes(
+            {
+              'objectClass'           => [
+                'olcOverlayConfig',
+                'olcSmbK5PwdConfig',
+              ],
+              'olcOverlay'            => ['{3}smbk5pwd'],
+              'olcSmbK5PwdEnable'     => ['samba'],
+              'olcSmbK5PwdMustChange' => ['2592000'],
+            }
+          ) }
+
+          case facts[:osfamily]
+          when 'Debian'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_monitor.la',
+                  '{1}back_hdb.la',
+                  '{2}syncprov.la',
+                  '{3}accesslog.la',
+                  '{4}auditlog.la',
+                  '{5}smbk5pwd.la',
+                ],
+              }
+            ) }
+            it { should contain_package('slapd-smbk5pwd').with_before('Openldap[cn=module{0},cn=config]') }
+          when 'RedHat'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}syncprov.la',
+                  '{1}accesslog.la',
+                  '{2}auditlog.la',
+                  '{3}smbk5pwd.la',
                 ],
               }
             ) }

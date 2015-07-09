@@ -35,6 +35,9 @@ class openldap::server (
   $replica_dn                = undef,
   $schema_dir                = $::openldap::params::schema_dir,
   $security                  = undef,
+  $smbk5pwd                  = false,
+  $smbk5pwd_backends         = [],
+  $smbk5pwd_must_change      = undef,
   $ssl_ca                    = $::openldap::params::ssl_ca,
   $ssl_cert                  = $::openldap::params::ssl_cert,
   $ssl_certs_dir             = $::openldap::params::ssl_certs_dir,
@@ -111,6 +114,13 @@ class openldap::server (
   validate_absolute_path($schema_dir)
   if $security {
     validate_re($security, '^\w+=\d+(?:\s+\w+=\d+)*$')
+  }
+  validate_bool($smbk5pwd)
+  if $smbk5pwd {
+    validate_array($smbk5pwd_backends)
+    if $smbk5pwd_must_change {
+      validate_integer($smbk5pwd_must_change)
+    }
   }
   if $ssl_ca {
     validate_absolute_path($ssl_ca)
