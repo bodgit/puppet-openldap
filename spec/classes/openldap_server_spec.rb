@@ -18,6 +18,7 @@ end
 shared_examples_for 'openldap::server on Debian' do
   it_behaves_like 'openldap::server'
 
+  it { should contain_exec("find /etc/ldap/slapd.d \\( -type f -exec chmod 0600 '{}' ';' \\) -o \\( -type d -exec chmod 0750 '{}' ';' \\)") }
   it { should contain_file('/etc/default/slapd') }
   it { should contain_file('/etc/ldap/slapd.d') }
   it { should contain_file('/var/cache/debconf/slapd.preseed') }
@@ -33,6 +34,7 @@ end
 shared_examples_for 'openldap::server on RedHat' do
   it_behaves_like 'openldap::server'
 
+  it { should contain_exec("find /etc/openldap/slapd.d \\( -type f -exec chmod 0600 '{}' ';' \\) -o \\( -type d -exec chmod 0750 '{}' ';' \\)") }
   it { should contain_file('/etc/openldap/slapd.d') }
   it { should contain_file('/etc/sysconfig/slapd') }
   it { should contain_file('/var/lib/ldap') }
