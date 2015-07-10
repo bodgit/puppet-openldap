@@ -5,6 +5,7 @@ Gemfile.lock
 Puppetfile.lock
 spec/fixtures/*
 !spec/fixtures/files
+!spec/fixtures/unit
 pkg
 log
 coverage

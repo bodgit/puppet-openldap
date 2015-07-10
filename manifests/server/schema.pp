@@ -12,7 +12,7 @@ define openldap::server::schema (
 
   validate_integer($position)
   if $ldif {
-    validate_absolute_path($ldif)
+    validate_string($ldif)
   }
   validate_bool($purge)
 

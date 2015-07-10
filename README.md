@@ -646,7 +646,8 @@ attributes not declared.
 
 Path to LDIF file containing the object definition which is used *only* if the
 object does not exist yet, (This is a shortcut for loading huge schema files
-without duplicating the whole schema object in the catalogue).
+without duplicating the whole schema object in the catalogue). A `puppet:///`
+URL can also be used for the location of the LDIF file.
 
 If a file resource exists in the catalogue for this value it will be
 autorequired.
