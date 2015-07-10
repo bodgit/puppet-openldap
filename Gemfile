@@ -10,6 +10,7 @@ group :development, :test do
   gem 'beaker',                      :require => false
   gem 'beaker-rspec',                :require => false
   gem 'rspec-puppet-facts',          :require => false
+  gem 'coveralls',                   :require => false
 end
 
 if facterversion = ENV['FACTER_GEM_VERSION']
