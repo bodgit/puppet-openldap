@@ -315,6 +315,10 @@ automatically when the `syncprov` parameter is used.
 
 Security strength factor assigned to `ldapi` connections.
 
+##### `log_level`
+
+Set the logging level. Maps to the `olcLogLevel` attribute.
+
 ##### `module_extension`
 
 The extension module files have, normally `.la`.

@@ -31,6 +31,18 @@ describe 'openldap::server' do
 
     pp = <<-EOS
       include ::firewall
+      class { '::rsyslog::client':
+        log_remote => false,
+        log_local  => true,
+      }
+      file { "${::rsyslog::rsyslog_d}/slapd.conf":
+        ensure  => file,
+        owner   => 0,
+        group   => 0,
+        mode    => '0644',
+        content => "local4.* /var/log/slapd.log\n",
+        notify  => Service[$::rsyslog::service_name],
+      }
       include ::openldap
       include ::openldap::client
       class { '::openldap::server':
@@ -56,8 +68,10 @@ describe 'openldap::server' do
         data_index_cachesize => 300,
         ldap_interfaces      => ['#{default.ip}'],
         local_ssf            => 256,
+        log_level            => 65535,
         smbk5pwd             => true,
         smbk5pwd_backends    => ['samba'],
+        require              => Class['::rsyslog::client'],
       }
       ::openldap::server::schema { 'cosine':
         position => 1,
@@ -219,5 +233,10 @@ describe 'openldap::server' do
     its(:stdout) { should match /^1500\s+Maximum number of locks possible$/ }
     its(:stdout) { should match /^1500\s+Maximum number of lockers possible$/ }
     its(:stdout) { should match /^1500\s+Maximum number of lock objects possible$/ }
+  end
+
+  describe file('/var/log/slapd.log') do
+    it { should be_file }
+    its(:size) { should > 0 }
   end
 end

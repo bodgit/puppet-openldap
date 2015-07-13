@@ -15,6 +15,7 @@ RSpec.configure do |c|
       copy_module_to(host, :source => proj_root, :module_name => 'openldap')
       on host, puppet('module', 'install', 'puppetlabs-stdlib'),   { :acceptable_exit_codes => [0,1] }
       on host, puppet('module', 'install', 'puppetlabs-firewall'), { :acceptable_exit_codes => [0,1] }
+      on host, puppet('module', 'install', 'saz-rsyslog'),         { :acceptable_exit_codes => [0,1] }
       scp_to(host, File.join(proj_root, 'spec/fixtures/files/example.ldif'), '/root/example.ldif')
       # Install SSL certs and key
       #scp_to(host, File.join(proj_root, 'spec/fixtures/files/ca.crt'), '/etc/pki/tls/ca.crt')

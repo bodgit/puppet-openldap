@@ -4,6 +4,7 @@ class openldap::params {
   $auditlog_file       = ''
   $ldap_interfaces     = ['']
   $ldaps_interfaces    = []
+  $log_level           = undef
   $module_extension    = '.la'
   $ssl_ca              = undef
   $ssl_cert            = undef

@@ -58,6 +58,7 @@ class openldap::server::config {
       'objectClass'              => 'olcGlobal',
       'olcArgsFile'              => $::openldap::server::args_file,
       'olcLocalSSF'              => $::openldap::server::local_ssf,
+      'olcLogLevel'              => $::openldap::server::log_level,
       'olcPidFile'               => $::openldap::server::pid_file,
       'olcSecurity'              => $::openldap::server::security,
       'olcTLSCACertificateFile'  => $::openldap::server::ssl_ca,

@@ -7,7 +7,6 @@ shared_examples_for 'openldap::server' do
   it { should contain_class('openldap::server::config') }
   it { should contain_class('openldap::server::install') }
   it { should contain_class('openldap::server::service') }
-  it { should contain_openldap('cn=config') }
   it { should contain_openldap('cn=schema,cn=config') }
   it { should contain_openldap('cn={0}core,cn=schema,cn=config') }
   it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
@@ -82,6 +81,7 @@ describe 'openldap::server' do
 
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
+          it { should contain_openldap('cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -125,6 +125,7 @@ describe 'openldap::server' do
               {
                 :auditlog      => true,
                 :auditlog_file => '/tmp/auditlog.ldif',
+                :log_level     => '128 filter 0x1',
               }
             )
           end
@@ -158,6 +159,15 @@ describe 'openldap::server' do
 
           case facts[:osfamily]
           when 'Debian'
+            it { should contain_openldap('cn=config').with_attributes(
+              {
+                'cn'          => ['config'],
+                'objectClass' => ['olcGlobal'],
+                'olcArgsFile' => ['/var/run/slapd/slapd.args'],
+                'olcLogLevel' => ['128 filter 0x1'],
+                'olcPidFile'  => ['/var/run/slapd/slapd.pid'],
+              }
+            ) }
             it { should contain_openldap('cn=module{0},cn=config').with_attributes(
               {
                 'cn'            => ['module{0}'],
@@ -170,6 +180,15 @@ describe 'openldap::server' do
               }
             ) }
           when 'RedHat'
+            it { should contain_openldap('cn=config').with_attributes(
+              {
+                'cn'          => ['config'],
+                'objectClass' => ['olcGlobal'],
+                'olcArgsFile' => ['/var/run/openldap/slapd.args'],
+                'olcLogLevel' => ['128 filter 0x1'],
+                'olcPidFile'  => ['/var/run/openldap/slapd.pid'],
+              }
+            ) }
             it { should contain_openldap('cn=module{0},cn=config').with_attributes(
               {
                 'cn'            => ['module{0}'],
@@ -193,6 +212,7 @@ describe 'openldap::server' do
 
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
+          it { should contain_openldap('cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -266,6 +286,7 @@ describe 'openldap::server' do
 
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
+          it { should contain_openldap('cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'       => [
@@ -339,6 +360,7 @@ describe 'openldap::server' do
 
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
+          it { should contain_openldap('cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -414,6 +436,7 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_file('/var/lib/ldap/log') }
+          it { should contain_openldap('cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -514,6 +537,7 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_file('/var/lib/ldap/log') }
+          it { should contain_openldap('cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'       => [
@@ -641,6 +665,7 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_file('/var/lib/ldap/log') }
+          it { should contain_openldap('cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'       => [
@@ -767,6 +792,7 @@ describe 'openldap::server' do
 
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
+          it { should contain_openldap('cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [

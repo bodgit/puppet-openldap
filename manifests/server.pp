@@ -29,6 +29,7 @@ class openldap::server (
   $ldaps_interfaces          = $::openldap::params::ldaps_interfaces,
   $limits                    = [],
   $local_ssf                 = undef,
+  $log_level                 = $::openldap::params::log_level,
   $module_extension          = $::openldap::params::module_extension,
   $package_name              = $::openldap::params::server_package_name,
   $pid_file                  = $::openldap::params::pid_file,
@@ -108,6 +109,9 @@ class openldap::server (
   }
   if $local_ssf {
     validate_integer($local_ssf)
+  }
+  if $log_level {
+    validate_re($log_level, '^(?:\d+|0x\h+|\w+)(?:\s+(?:\d+|0x\h+|\w+))*$')
   }
   validate_string($package_name)
   validate_absolute_path($pid_file)
