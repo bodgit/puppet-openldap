@@ -23,9 +23,9 @@ task :test => [
 ]
 
 PuppetLint.configuration.log_format = '%{path}:%{linenumber}:%{check}:%{KIND}:%{message}'
-PuppetLint.configuration.ignore_paths = ['spec/**/*.pp']
+PuppetLint.configuration.ignore_paths = ['pkg/**/*.pp', 'spec/**/*.pp', 'vendor/**/*.pp']
 PuppetLint.configuration.fail_on_warnings = true
 PuppetLint.configuration.relative = true
 PuppetLint.configuration.send('disable_class_inherits_from_params_class')
 
-PuppetSyntax.exclude_paths = ['spec/**/*.pp']
+PuppetSyntax.exclude_paths = ['pkg/**/*', 'spec/**/*', 'vendor/**/*']
