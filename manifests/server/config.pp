@@ -142,11 +142,13 @@ class openldap::server::config {
   openldap { 'olcDatabase={-1}frontend,cn=config':
     ensure     => present,
     attributes => {
-      'objectClass' => [
+      'objectClass'  => [
         'olcDatabaseConfig',
         'olcFrontendConfig',
       ],
-      'olcDatabase' => '{-1}frontend',
+      'olcDatabase'  => '{-1}frontend',
+      'olcSizeLimit' => $::openldap::server::size_limit,
+      'olcTimeLimit' => $::openldap::server::time_limit,
     },
   }
 
@@ -156,6 +158,7 @@ class openldap::server::config {
       'objectClass' => 'olcDatabaseConfig',
       'olcAccess'   => '{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by * none', # lint:ignore:80chars
       'olcDatabase' => '{0}config',
+      'olcLimits'   => '{0}dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited', # lint:ignore:80chars
     },
   }
 

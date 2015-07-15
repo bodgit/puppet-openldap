@@ -347,6 +347,11 @@ used as a default by the
 Specify minimum security strength factors in the same form as the
 `olcSecurity` attribute.
 
+##### `size_limit`
+
+Specify the maximum number of entries to return from a search operation. Maps
+to the `olcSizeLimit` attribute set on the `frontend` database.
+
 ##### `smbk5pwd`
 
 Setting this to `true` will enable the `smbk5pwd` overlay. In order to add this
@@ -423,6 +428,11 @@ Maps to the `olcSpSessionlog` attribute.
 
 An array of `olcSyncrepl` attribute values used to establish a replication
 relationship between this server and a producer.
+
+##### `time_limit`
+
+Specify the maximum number of seconds `slapd` will spend answering a search
+request. Maps to the `olcTimeLimit` attribute set on the `frontend` database.
 
 ##### `update_ref`
 

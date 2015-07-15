@@ -69,6 +69,7 @@ describe 'openldap::server' do
         ldap_interfaces      => ['#{default.ip}'],
         local_ssf            => 256,
         log_level            => 65535,
+        size_limit           => 'size.soft=1 size.hard=unlimited',
         smbk5pwd             => true,
         smbk5pwd_backends    => ['samba'],
         require              => Class['::rsyslog::client'],
@@ -173,12 +174,10 @@ describe 'openldap::server' do
     it { should be_listening.on(default.ip).with('tcp') }
   end
 
-  # Test that TCP works, binds work, and that no password hashes are disclosed
+  # Test that TCP works, binds work, but that the soft size limit is triggered
   describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w password") do
-    its(:exit_status) { should eq 0 }
-    its(:stdout) { should_not match /^userPassword/ }
-    its(:stdout) { should_not match /^sambaLMPassword/ }
-    its(:stdout) { should_not match /^sambaNTPassword/ }
+    its(:exit_status) { should eq 4 }
+    its(:stdout) { should match /^result: 4 Size limit exceeded$/ }
   end
 
   # Test password change
@@ -187,7 +186,7 @@ describe 'openldap::server' do
   end
 
   # Test that TCP works, binds work, and that no password hashes are disclosed
-  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w secret") do
+  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w secret -z max") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should_not match /^userPassword/ }
     its(:stdout) { should_not match /^sambaLMPassword/ }

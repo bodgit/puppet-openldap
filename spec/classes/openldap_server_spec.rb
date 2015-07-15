@@ -9,8 +9,14 @@ shared_examples_for 'openldap::server' do
   it { should contain_class('openldap::server::service') }
   it { should contain_openldap('cn=schema,cn=config') }
   it { should contain_openldap('cn={0}core,cn=schema,cn=config') }
-  it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
-  it { should contain_openldap('olcDatabase={0}config,cn=config') }
+  it { should contain_openldap('olcDatabase={0}config,cn=config').with_attributes(
+    {
+      'objectClass' => ['olcDatabaseConfig'],
+      'olcAccess'   => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by * none'],
+      'olcDatabase' => ['{0}config'],
+      'olcLimits'   => ['{0}dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'],
+    }
+  ) }
   it { should contain_openldap('olcDatabase={1}monitor,cn=config') }
 end
 
@@ -82,6 +88,7 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -126,12 +133,25 @@ describe 'openldap::server' do
                 :auditlog      => true,
                 :auditlog_file => '/tmp/auditlog.ldif',
                 :log_level     => '128 filter 0x1',
+                :size_limit    => 500,
+                :time_limit    => 'unlimited',
               }
             )
           end
 
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config').with_attributes(
+            {
+              'objectClass'  => [
+                'olcDatabaseConfig',
+                'olcFrontendConfig',
+              ],
+              'olcDatabase'  => ['{-1}frontend'],
+              'olcSizeLimit' => ['500'],
+              'olcTimeLimit' => ['unlimited'],
+            }
+          ) }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -205,7 +225,9 @@ describe 'openldap::server' do
           let(:params) do
             super().merge(
               {
-                :smbk5pwd => true,
+                :smbk5pwd   => true,
+                :size_limit => 'unlimited',
+                :time_limit => 3600,
               }
             )
           end
@@ -213,6 +235,17 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config').with_attributes(
+            {
+              'objectClass'  => [
+                'olcDatabaseConfig',
+                'olcFrontendConfig',
+              ],
+              'olcDatabase'  => ['{-1}frontend'],
+              'olcSizeLimit' => ['unlimited'],
+              'olcTimeLimit' => ['3600'],
+            }
+          ) }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -278,7 +311,9 @@ describe 'openldap::server' do
                 ],
                 :data_dn_cachesize    => 1500,
                 :data_index_cachesize => 4500,
+                :size_limit           => 'size.soft=10 size.hard=20',
                 :syncprov             => true,
+                :time_limit           => 'time.soft=10 time.hard=60',
                 :replica_dn           => 'cn=replicator,dc=example,dc=com',
               }
             )
@@ -287,6 +322,17 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config').with_attributes(
+            {
+              'objectClass'  => [
+                'olcDatabaseConfig',
+                'olcFrontendConfig',
+              ],
+              'olcDatabase'  => ['{-1}frontend'],
+              'olcSizeLimit' => ['size.soft=10 size.hard=20'],
+              'olcTimeLimit' => ['time.soft=10 time.hard=60'],
+            }
+          ) }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'       => [
@@ -361,6 +407,7 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -437,6 +484,7 @@ describe 'openldap::server' do
 
           it { should contain_file('/var/lib/ldap/log') }
           it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [
@@ -538,6 +586,7 @@ describe 'openldap::server' do
 
           it { should contain_file('/var/lib/ldap/log') }
           it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'       => [
@@ -666,6 +715,7 @@ describe 'openldap::server' do
 
           it { should contain_file('/var/lib/ldap/log') }
           it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'       => [
@@ -793,6 +843,7 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
           it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
             {
               'objectClass'    => [

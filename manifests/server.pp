@@ -36,6 +36,7 @@ class openldap::server (
   $replica_dn                = undef,
   $schema_dir                = $::openldap::params::schema_dir,
   $security                  = undef,
+  $size_limit                = undef,
   $smbk5pwd                  = false,
   $smbk5pwd_backends         = [],
   $smbk5pwd_must_change      = undef,
@@ -50,6 +51,7 @@ class openldap::server (
   $syncprov_checkpoint       = $::openldap::params::syncprov_checkpoint,
   $syncprov_sessionlog       = $::openldap::params::syncprov_sessionlog,
   $syncrepl                  = undef,
+  $time_limit                = undef,
   $update_ref                = undef,
   $user                      = $::openldap::params::user,
 ) inherits ::openldap::params {
@@ -119,6 +121,9 @@ class openldap::server (
   if $security {
     validate_re($security, '^\w+=\d+(?:\s+\w+=\d+)*$')
   }
+  if $size_limit {
+    validate_re($size_limit, '^(?:(size)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars
+  }
   validate_bool($smbk5pwd)
   if $smbk5pwd {
     validate_array($smbk5pwd_backends)
@@ -155,6 +160,9 @@ class openldap::server (
   }
   if $syncrepl {
     validate_array($syncrepl)
+  }
+  if $time_limit {
+    validate_re($time_limit, '^(?:(time)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars
   }
   if $update_ref {
     validate_array($update_ref)
