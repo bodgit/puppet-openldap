@@ -689,7 +689,7 @@ class { '::openldap':
   group  => 0,
   mode   => '0640',
   base   => 'dc=example,dc=com',
-  uri    => 'ldap://ldap.example.com/',
+  uri    => ['ldap://ldap.example.com/'],
 }
 
 ::Openldap::Configuration['/etc/skel/.ldaprc'] -> User <||>
@@ -820,7 +820,7 @@ class { '::openldap::server':
   syncrepl        => [
     'rid=001 provider=ldap://ldap.example.com/ searchbase="dc=example,dc=com" bindmethod=simple binddn="cn=replicator,dc=example,dc=com" credentials=secret logbase="cn=log" logfilter="(&(objectClass=auditWriteObject)(reqResult=0))" schemachecking=on type=refreshAndPersist retry="60 +" syncdata=accesslog',
   ],
-  update_ref      => 'ldap://ldap.example.com/',
+  update_ref      => ['ldap://ldap.example.com/'],
 }
 ::openldap::server::schema { 'cosine':
   position => 1,
