@@ -23,7 +23,7 @@ group :development, :test do
   gem 'librarian-puppet',                                 :require => false
   gem 'beaker', '>= 2.18.2',                              :require => false
   gem 'beaker-rspec',                                     :require => false
-  gem 'rspec-puppet-facts', ['>= 0.11.0', '< 1.0.0'],     :require => false
+  gem 'rspec-puppet-facts', '>= 0.11.0', '< 1.0.0',       :require => false
   gem 'coveralls',                                        :require => false
   gem 'specinfra', '>= 2.42.1',                           :require => false
 end
