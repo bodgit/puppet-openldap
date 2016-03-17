@@ -5,6 +5,7 @@ Tested with Travis CI
 [![Build Status](https://travis-ci.org/bodgit/puppet-openldap.svg?branch=master)](https://travis-ci.org/bodgit/puppet-openldap)
 [![Coverage Status](https://coveralls.io/repos/bodgit/puppet-openldap/badge.svg?branch=master&service=github)](https://coveralls.io/github/bodgit/puppet-openldap?branch=master)
 [![Puppet Forge](http://img.shields.io/puppetforge/v/bodgit/openldap.svg)](https://forge.puppetlabs.com/bodgit/openldap)
+[![Dependency Status](https://gemnasium.com/bodgit/puppet-openldap.svg)](https://gemnasium.com/bodgit/puppet-openldap)
 
 #### Table of Contents
 

@@ -1,7 +1,7 @@
 #
 class openldap::params {
 
-  $auditlog_file       = ''
+  $auditlog_file       = undef
   $ldap_interfaces     = ['']
   $ldaps_interfaces    = []
   $log_level           = undef

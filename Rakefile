@@ -16,16 +16,18 @@ task :librarian_spec_prep do
 end
 task :spec_prep => :librarian_spec_prep
 
+Rake::Task[:lint].clear
+PuppetLint::RakeTask.new :lint do |config|
+  config.ignore_paths = ["spec/**/*.pp", "pkg/**/*.pp", "vendor/**/*.pp"]
+  config.log_format = '%{path}:%{linenumber}:%{check}:%{KIND}:%{message}'
+  config.disable_checks = ['class_inherits_from_params_class']
+  config.fail_on_warnings = true
+end
+
 task :test => [
   'syntax',
   'spec',
   'lint',
 ]
-
-PuppetLint.configuration.log_format = '%{path}:%{linenumber}:%{check}:%{KIND}:%{message}'
-PuppetLint.configuration.ignore_paths = ['pkg/**/*.pp', 'spec/**/*.pp', 'vendor/**/*.pp']
-PuppetLint.configuration.fail_on_warnings = true
-PuppetLint.configuration.relative = true
-PuppetLint.configuration.send('disable_class_inherits_from_params_class')
 
 PuppetSyntax.exclude_paths = ['pkg/**/*', 'spec/**/*', 'vendor/**/*']

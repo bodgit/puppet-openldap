@@ -31,7 +31,7 @@ class openldap::server::install {
         owner  => 0,
         group  => 0,
         mode   => '0644',
-        source => "puppet:///modules/openldap/${::osfamily}/slapd.preseed",
+        source => file("openldap/${::osfamily}/slapd.preseed"),
         before => Package[$package_name],
       }
     }
@@ -72,7 +72,7 @@ class openldap::server::install {
     source_permissions => use_when_creating,
     replace            => false,
     recurse            => true,
-    source             => "puppet:///modules/openldap/${::osfamily}/slapd.d",
+    source             => "puppet:///modules/openldap/${::osfamily}/slapd.d", # lint:ignore:source_without_rights
     require            => [
       User[$user],
       Group[$group],

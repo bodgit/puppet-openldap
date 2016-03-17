@@ -87,7 +87,7 @@ class openldap::server::config {
     $::openldap::server::smbk5pwd ? {
       true    => 'smbk5pwd',
       default => '',
-    }
+    },
   ]
 
   $overlays = reject($overlay_candidates, '^\s*$')

@@ -122,7 +122,7 @@ class openldap::server (
     validate_re($security, '^\w+=\d+(?:\s+\w+=\d+)*$')
   }
   if $size_limit {
-    validate_re($size_limit, '^(?:(size)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars
+    validate_re("${size_limit}", '^(?:(size)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars lint:ignore:only_variable_string
   }
   validate_bool($smbk5pwd)
   if $smbk5pwd {
@@ -162,7 +162,7 @@ class openldap::server (
     validate_array($syncrepl)
   }
   if $time_limit {
-    validate_re($time_limit, '^(?:(time)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars
+    validate_re("${time_limit}", '^(?:(time)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars lint:ignore:only_variable_string
   }
   if $update_ref {
     validate_array($update_ref)
