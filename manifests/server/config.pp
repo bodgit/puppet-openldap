@@ -53,7 +53,7 @@ class openldap::server::config {
 
   openldap { 'cn=config':
     ensure     => present,
-    attributes => {
+    attributes => delete_undef_values({
       'cn'                       => 'config',
       'objectClass'              => 'olcGlobal',
       'olcArgsFile'              => $::openldap::server::args_file,
@@ -68,7 +68,7 @@ class openldap::server::config {
       'olcTLSCipherSuite'        => $::openldap::server::ssl_cipher,
       'olcTLSDHParamFile'        => $::openldap::server::ssl_dhparam,
       'olcTLSProtocolMin'        => $::openldap::server::ssl_protocol,
-    },
+    }),
   }
 
   $overlay_candidates = [
@@ -141,7 +141,7 @@ class openldap::server::config {
 
   openldap { 'olcDatabase={-1}frontend,cn=config':
     ensure     => present,
-    attributes => {
+    attributes => delete_undef_values({
       'objectClass'  => [
         'olcDatabaseConfig',
         'olcFrontendConfig',
@@ -149,7 +149,7 @@ class openldap::server::config {
       'olcDatabase'  => '{-1}frontend',
       'olcSizeLimit' => $::openldap::server::size_limit,
       'olcTimeLimit' => $::openldap::server::time_limit,
-    },
+    }),
   }
 
   openldap { 'olcDatabase={0}config,cn=config':
@@ -200,7 +200,7 @@ class openldap::server::config {
 
       openldap { "olcDatabase={2}${db_backend},cn=config":
         ensure     => present,
-        attributes => {
+        attributes => delete_undef_values({
           'objectClass'       => [
             'olcDatabaseConfig',
             $object_class,
@@ -219,13 +219,13 @@ class openldap::server::config {
           'olcLimits'         => openldap_values($replica_limits),
           'olcRootDN'         => $::openldap::server::root_dn,
           'olcSuffix'         => 'cn=log',
-        },
+        }),
         require    => Openldap['cn=module{0},cn=config'],
       }
 
       openldap { "olcOverlay={0}syncprov,olcDatabase={2}${db_backend},cn=config": # lint:ignore:80chars
         ensure     => present,
-        attributes => {
+        attributes => delete_undef_values({
           'objectClass'     => [
             'olcOverlayConfig',
             'olcSyncProvConfig',
@@ -235,7 +235,7 @@ class openldap::server::config {
           'olcSpNoPresent'  => 'TRUE',
           'olcSpReloadHint' => 'TRUE',
           'olcSpSessionlog' => $::openldap::server::syncprov_sessionlog,
-        },
+        }),
         require    => Openldap['cn=module{0},cn=config'],
       }
 
@@ -269,7 +269,7 @@ class openldap::server::config {
 
   openldap { "olcDatabase={${db_index}}${db_backend},cn=config":
     ensure     => present,
-    attributes => {
+    attributes => delete_undef_values({
       'objectClass'       => [
         'olcDatabaseConfig',
         $object_class,
@@ -290,14 +290,14 @@ class openldap::server::config {
       # slave/consumer
       'olcSyncrepl'       => openldap_values($::openldap::server::syncrepl),
       'olcUpdateRef'      => openldap_values($::openldap::server::update_ref),
-    },
+    }),
     require    => Openldap['cn=module{0},cn=config'],
   }
 
   if $::openldap::server::syncprov {
     openldap { "olcOverlay=${overlay_index['syncprov']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
       ensure     => present,
-      attributes => {
+      attributes => delete_undef_values({
         'objectClass'     => [
           'olcOverlayConfig',
           'olcSyncProvConfig',
@@ -306,14 +306,14 @@ class openldap::server::config {
         'olcSpCheckpoint' => $::openldap::server::syncprov_checkpoint,
         'olcSpReloadHint' => 'TRUE',
         'olcSpSessionlog' => $::openldap::server::syncprov_sessionlog,
-      },
+      }),
       require    => Openldap['cn=module{0},cn=config'],
     }
 
     if $::openldap::server::accesslog {
       openldap { "olcOverlay=${overlay_index['accesslog']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
         ensure     => present,
-        attributes => {
+        attributes => delete_undef_values({
           'objectClass'         => [
             'olcOverlayConfig',
             'olcAccessLogConfig',
@@ -323,7 +323,7 @@ class openldap::server::config {
           'olcAccessLogOps'     => 'writes',
           'olcAccessLogSuccess' => 'TRUE',
           'olcAccessLogPurge'   => '07+00:00 01+00:00',
-        },
+        }),
         require    => Openldap['cn=module{0},cn=config'],
       }
     }
@@ -332,14 +332,14 @@ class openldap::server::config {
   if $::openldap::server::auditlog {
     openldap { "olcOverlay=${overlay_index['auditlog']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
       ensure     => present,
-      attributes => {
+      attributes => delete_undef_values({
         'objectClass'     => [
           'olcOverlayConfig',
           'olcAuditlogConfig',
         ],
         'olcOverlay'      => $overlay_index['auditlog'],
         'olcAuditlogFile' => $::openldap::server::auditlog_file,
-      },
+      }),
       require    => Openldap['cn=module{0},cn=config'],
     }
   }
@@ -356,7 +356,7 @@ class openldap::server::config {
 
     openldap { "olcOverlay=${overlay_index['smbk5pwd']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
       ensure     => present,
-      attributes => {
+      attributes => delete_undef_values({
         'objectClass'           => [
           'olcOverlayConfig',
           'olcSmbK5PwdConfig',
@@ -364,7 +364,7 @@ class openldap::server::config {
         'olcOverlay'            => $overlay_index['smbk5pwd'],
         'olcSmbK5PwdEnable'     => $::openldap::server::smbk5pwd_backends,
         'olcSmbK5PwdMustChange' => $::openldap::server::smbk5pwd_must_change,
-      },
+      }),
       require    => Openldap['cn=module{0},cn=config'],
     }
   }

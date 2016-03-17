@@ -18,7 +18,7 @@ define openldap::server::schema (
 
   openldap { "cn={${position}}${name},cn=schema,cn=config":
     ensure     => present,
-    attributes => $attributes,
+    attributes => delete_undef_values($attributes),
     ldif       => $ldif,
     purge      => $purge,
   }
