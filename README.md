@@ -296,13 +296,15 @@ overlay. They are added automatically.
 
 Any array of `address(:port)` values that will be wrapped with `ldap://` &
 `/` to form a list of interfaces to listen on for regular LDAP (optionally
-with STARTTLS) connections, traditionally on TCP port 389.
+with STARTTLS) connections, traditionally on TCP port 389. For IPv6 values,
+the address portion should be wrapped with `[]`'s, i.e.  `[address](:port)`.
 
 ##### `ldaps_interfaces`
 
 Any array of `address(:port)` values that will be wrapped with `ldaps://` &
 `/` to form a list of interfaces to listen on for LDAP over SSL connections,
-traditionally on TCP port 636.
+traditionally on TCP port 636. For IPv6 values, the address portion should
+be wrapped with `[]`'s, i.e. `[address](:port)`.
 
 ##### `limits`
 
