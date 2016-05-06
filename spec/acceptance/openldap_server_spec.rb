@@ -3,11 +3,17 @@ require 'spec_helper_acceptance'
 describe 'openldap::server' do
   case fact('osfamily')
   when 'RedHat'
-    db_package    = 'libdb-utils'
     db_stat       = 'db_stat'
     package_name  = 'openldap-servers'
     samba_package = 'samba'
-    samba_schema  = '/usr/share/doc/samba-4.1.12/LDAP/samba.ldif'
+    case fact(:operatingsystemmajrelease)
+    when '6'
+      db_package   = 'db4-utils'
+      samba_schema = '/usr/share/doc/samba-3.6.23/LDAP/samba.ldif'
+    when '7'
+      db_package   = 'libdb-utils'
+      samba_schema = '/usr/share/doc/samba-4.2.10/LDAP/samba.ldif'
+    end
     service_name  = 'slapd'
   when 'Debian'
     db_package    = 'db5.3-util'
@@ -222,7 +228,7 @@ describe 'openldap::server' do
 
   describe command("#{db_stat} -m -h /var/lib/ldap/data") do
     its(:exit_status) { should eq 0 }
-    its(:stdout) { should match /^2MB 520KB\s+Total cache size$/ }
+    its(:stdout) { should match /^2MB (520KB|514KB 24B)\s+Total cache size$/ }
     its(:stdout) { should match /^1\s+Number of caches$/ }
     its(:stdout) { should match /^1\s+Maximum number of caches$/ }
   end

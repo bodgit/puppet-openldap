@@ -36,11 +36,9 @@ Puppet::Type.newtype(:openldap) do
       end
 
       # Prune any keys where the value is a zero-element array
-      value.select! do |k,v|
-        v.size > 0
-      end
-
-      value
+      #
+      # Ruby 1.8.7 compatible
+      Hash[value.select { |k,v| v.size > 0 }]
     end
 
     def insync?(is)
@@ -125,7 +123,10 @@ Puppet::Type.newtype(:openldap) do
       # the latter
 
       # A root node won't have a parent
-      parent = self[:name].match(/(?<=,).+$/).to_s
+      #
+      # No positive look-behind on ruby 1.8.7 so instead reverse things and use
+      # positive look-ahead instead
+      parent = self[:name].reverse.match(/^.+(?=,)/).to_s.reverse
 
       # In the case of a position create a regexp that matches the previous
       # sibling, i.e. 'cn={2}foo,ou=baz' produces /^cn=\{1\}[^,]+,ou=baz$/
@@ -176,7 +177,8 @@ Puppet::Type.newtype(:openldap) do
 
     # Autorequire any file resource pointed at by the given attributes
     if self[:attributes]
-      autos += self[:attributes].select { |k,v| FILE_ATTRIBUTES.include?(k.downcase) }.values.flatten
+      # Ruby 1.8.7 compatible
+      autos += Hash[self[:attributes].select { |k,v| FILE_ATTRIBUTES.include?(k.downcase) }].values.flatten
     end
 
     # Autorequire the LDIF file if passed and it's a local file

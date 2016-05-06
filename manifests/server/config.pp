@@ -30,7 +30,15 @@ class openldap::server::config {
 
   case $::osfamily { # lint:ignore:case_without_default
     'RedHat': {
-      file { '/etc/sysconfig/slapd':
+      case $::operatingsystemmajrelease {
+        '6': {
+          $sysconfig = '/etc/sysconfig/ldap'
+        }
+        default: {
+          $sysconfig = '/etc/sysconfig/slapd'
+        }
+      }
+      file { $sysconfig:
         ensure  => file,
         owner   => 0,
         group   => 0,

@@ -1,3 +1,9 @@
 # !!! Managed by Puppet !!!
+<% if @operatingsystemmajrelease.to_i < 7 -%>
+
+SLAPD_LDAP="no"
+SLAPD_LDAPI="no"
+SLAPD_LDAPS="no"
+<% end -%>
 
 SLAPD_URLS="ldapi:///<% if @ldap_interfaces.size > 0 %> <%= @ldap_interfaces.join(' ') %><% end %><% if @ldaps_interfaces.size > 0 %> <%= @ldaps_interfaces.join(' ') %><% end %>"
