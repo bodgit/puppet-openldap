@@ -41,7 +41,6 @@ shared_examples_for 'openldap::server on RedHat' do
 
   it { should contain_exec("find /etc/openldap/slapd.d \\( -type f -exec chmod 0600 '{}' ';' \\) -o \\( -type d -exec chmod 0750 '{}' ';' \\)") }
   it { should contain_file('/etc/openldap/slapd.d') }
-  it { should contain_file('/etc/sysconfig/slapd') }
   it { should contain_file('/var/lib/ldap') }
   it { should contain_file('/var/lib/ldap/data') }
   it { should contain_group('ldap') }
@@ -117,6 +116,12 @@ describe 'openldap::server' do
               }
             ) }
           when 'RedHat'
+            case facts[:operatingsystemmajrelease]
+            when '6'
+              it { should contain_file('/etc/sysconfig/ldap') }
+            else
+              it { should contain_file('/etc/sysconfig/slapd') }
+            end
             it { should contain_openldap('cn=module{0},cn=config').with_attributes(
               {
                 'cn'          => ['module{0}'],

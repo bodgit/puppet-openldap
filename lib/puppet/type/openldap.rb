@@ -38,7 +38,7 @@ Puppet::Type.newtype(:openldap) do
       # Prune any keys where the value is a zero-element array
       #
       # Ruby 1.8.7 compatible
-      Hash[value.select { |k,v| v.size > 0 }]
+      value.delete_if { |k,v| v.size == 0 }
     end
 
     def insync?(is)
