@@ -360,7 +360,7 @@ describe 'openldap::server' do
               'olcDbDirectory'    => ['/var/lib/ldap/data'],
               'olcDbDNcacheSize'  => ['1500'],
               'olcDbIDLcacheSize' => ['4500'],
-              'olcDbIndex'        => ['entryCSN,entryUUID eq'],
+              'olcDbIndex'        => ['entryCSN eq', 'entryUUID eq'],
               'olcLimits'         => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
               ],
@@ -425,7 +425,7 @@ describe 'openldap::server' do
               ],
               'olcDatabase'    => ['{2}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
               'olcLimits'      => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
               ],
@@ -502,7 +502,7 @@ describe 'openldap::server' do
               'olcDatabase'    => ['{2}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/log'],
               'olcDbIndex'     => [
-                'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
+                'entryCSN eq', 'objectClass eq', 'reqEnd eq', 'reqResult eq', 'reqStart eq'
               ],
               'olcLimits'      => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
@@ -524,7 +524,7 @@ describe 'openldap::server' do
               ],
               'olcDatabase'    => ['{3}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
               'olcLimits'      => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
               ],
@@ -614,7 +614,7 @@ describe 'openldap::server' do
               'olcDbDNcacheSize'  => ['1500'],
               'olcDbIDLcacheSize' => ['4500'],
               'olcDbIndex'        => [
-                'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
+                'entryCSN eq', 'objectClass eq', 'reqEnd eq', 'reqResult eq', 'reqStart eq'
               ],
               'olcLimits'         => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
@@ -636,7 +636,7 @@ describe 'openldap::server' do
               ],
               'olcDatabase'    => ['{3}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
               'olcLimits'      => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
               ],
@@ -743,7 +743,7 @@ describe 'openldap::server' do
               'olcDbDNcacheSize'  => ['1500'],
               'olcDbIDLcacheSize' => ['4500'],
               'olcDbIndex'        => [
-                'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
+                'entryCSN eq', 'objectClass eq', 'reqEnd eq', 'reqResult eq', 'reqStart eq'
               ],
               'olcLimits'         => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
@@ -765,7 +765,7 @@ describe 'openldap::server' do
               ],
               'olcDatabase'    => ['{3}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
               'olcLimits'      => [
                 '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
               ],
@@ -858,7 +858,7 @@ describe 'openldap::server' do
               'olcAccess'      => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage'],
               'olcDatabase'    => ['{2}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
               'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
               'olcRootPW'      => ['secret'],
               'olcSuffix'      => ['dc=example,dc=com'],

@@ -24,7 +24,7 @@ class openldap::server (
   $data_index_cachesize      = undef,
   $db_backend                = $::openldap::params::db_backend,
   $group                     = $::openldap::params::group,
-  $indices                   = undef,
+  $indices                   = [],
   $ldap_interfaces           = $::openldap::params::ldap_interfaces,
   $ldaps_interfaces          = $::openldap::params::ldaps_interfaces,
   $limits                    = [],
@@ -101,9 +101,7 @@ class openldap::server (
   }
   validate_string($db_backend)
   validate_string($group)
-  if $indices {
-    validate_array($indices)
-  }
+  validate_array($indices)
   validate_array($ldap_interfaces)
   validate_array($ldaps_interfaces)
   if $limits {

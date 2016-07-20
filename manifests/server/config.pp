@@ -193,7 +193,9 @@ class openldap::server::config {
     # required by the overlay
     $access  = flatten(["${replica_access} by * break",
       $::openldap::server::access])
-    $indices = flatten([$::openldap::server::indices, 'entryCSN,entryUUID eq'])
+    $indices = openldap_unique_indices(
+      flatten([$::openldap::server::indices, 'entryCSN,entryUUID eq'])
+    )
     $limits  = flatten([$replica_limits, $::openldap::server::limits])
 
     # accesslog overlay is required, i.e. delta-syncrepl
@@ -222,7 +224,11 @@ class openldap::server::config {
           'olcDbDNcacheSize'  => $::openldap::server::accesslog_dn_cachesize,
           'olcDbIDLcacheSize' => $::openldap::server::accesslog_index_cachesize,
           'olcDbIndex'        => [
-            'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
+            'entryCSN eq',
+            'objectClass eq',
+            'reqEnd eq',
+            'reqResult eq',
+            'reqStart eq',
           ],
           'olcLimits'         => openldap_values($replica_limits),
           'olcRootDN'         => $::openldap::server::root_dn,
@@ -257,10 +263,11 @@ class openldap::server::config {
 
     # If this is a slave/consumer, create necessary indices
     if $::openldap::server::syncrepl {
-      $indices = flatten([$::openldap::server::indices,
-        'entryCSN,entryUUID eq'])
+      $indices = openldap_unique_indices(
+        flatten([$::openldap::server::indices, 'entryCSN,entryUUID eq'])
+      )
     } else {
-      $indices = $::openldap::server::indices
+      $indices = openldap_unique_indices($::openldap::server::indices)
     }
 
     $limits = $::openldap::server::limits
