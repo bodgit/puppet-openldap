@@ -17,6 +17,7 @@ RSpec.configure do |c|
       on host, puppet('module', 'install', 'puppetlabs-firewall'), { :acceptable_exit_codes => [0,1] }
       on host, puppet('module', 'install', 'saz-rsyslog'),         { :acceptable_exit_codes => [0,1] }
       scp_to(host, File.join(proj_root, 'spec/fixtures/files/example.ldif'), '/root/example.ldif')
+      scp_to(host, File.join(proj_root, 'spec/fixtures/files/unique.ldif'), '/root/unique.ldif')
       # Install SSL certs and key
       #scp_to(host, File.join(proj_root, 'spec/fixtures/files/ca.crt'), '/etc/pki/tls/ca.crt')
       #scp_to(host, File.join(proj_root, "spec/fixtures/files/#{host}.key"), '/etc/pki/tls/ldap.key')

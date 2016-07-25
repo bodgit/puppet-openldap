@@ -52,6 +52,8 @@ class openldap::server (
   $syncprov_sessionlog       = $::openldap::params::syncprov_sessionlog,
   $syncrepl                  = undef,
   $time_limit                = undef,
+  $unique                    = false,
+  $unique_uris               = $::openldap::params::unique_uris,
   $update_ref                = undef,
   $user                      = $::openldap::params::user,
 ) inherits ::openldap::params {
@@ -161,6 +163,10 @@ class openldap::server (
   }
   if $time_limit {
     validate_re("${time_limit}", '^(?:(time)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars lint:ignore:only_variable_string
+  }
+  validate_bool($unique)
+  if $unique {
+    validate_array($unique_uris)
   }
   if $update_ref {
     validate_array($update_ref)

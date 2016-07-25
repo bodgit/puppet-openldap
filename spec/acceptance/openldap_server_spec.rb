@@ -62,6 +62,8 @@ describe 'openldap::server' do
         ],
         auditlog             => true,
         auditlog_file        => '/tmp/auditlog.ldif',
+        unique               => true,
+        unique_uris          => ['ldap:///dc=example,dc=com?uidNumber?sub'],
         data_cachesize       => 100,
         data_checkpoint      => '1 1',
         data_db_config       => [
@@ -167,6 +169,7 @@ describe 'openldap::server' do
         dn: olcDatabase={2}hdb,cn=config
         dn: olcOverlay={0}auditlog,olcDatabase={2}hdb,cn=config
         dn: olcOverlay={1}smbk5pwd,olcDatabase={2}hdb,cn=config
+        dn: olcOverlay={2}unique,olcDatabase={2}hdb,cn=config
       EOS
     end
   end
@@ -197,6 +200,12 @@ describe 'openldap::server' do
     its(:stdout) { should_not match /^userPassword/ }
     its(:stdout) { should_not match /^sambaLMPassword/ }
     its(:stdout) { should_not match /^sambaNTPassword/ }
+  end
+
+  # Test that the uniqueness of uidNumber is enforced
+  describe command("ldapadd -Y EXTERNAL -H ldapi:/// -f /root/unique.ldif") do
+    its(:exit_status) { should eq 19 }
+    its(:stderr) { should match /some attributes not unique/ }
   end
 
   # Test password modification made it into the audit log including the

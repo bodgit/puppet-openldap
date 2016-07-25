@@ -15,6 +15,7 @@ class openldap::params {
   $ssl_protocol        = undef
   $syncprov_checkpoint = '100 10'
   $syncprov_sessionlog = 100
+  $unique_uris         = undef
 
   case $::osfamily {
     'RedHat': {

@@ -1,0 +1,9 @@
+dn: uid=bob,ou=people,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+uid: bob
+sn: Example
+cn: Bob Example
+uidNumber: 1000
+gidNumber: 1000
+homeDirectory: /home/bob

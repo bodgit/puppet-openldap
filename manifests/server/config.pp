@@ -96,6 +96,10 @@ class openldap::server::config {
       true    => 'smbk5pwd',
       default => '',
     },
+    $::openldap::server::unique ? {
+      true    => 'unique',
+      default => '',
+    },
   ]
 
   $overlays = reject($overlay_candidates, '^\s*$')
@@ -379,6 +383,21 @@ class openldap::server::config {
         'olcOverlay'            => $overlay_index['smbk5pwd'],
         'olcSmbK5PwdEnable'     => $::openldap::server::smbk5pwd_backends,
         'olcSmbK5PwdMustChange' => $::openldap::server::smbk5pwd_must_change,
+      }),
+      require    => Openldap['cn=module{0},cn=config'],
+    }
+  }
+
+  if $::openldap::server::unique {
+    openldap {"olcOverlay=${overlay_index['unique']},olcDatabase={${db_index}}${db_backend},cn=config": #lint:ignore:80chars
+      ensure     => present,
+      attributes => delete_undef_values({
+        'objectClass'  => [
+          'olcOverlayConfig',
+          'olcUniqueConfig',
+        ],
+        'olcOverlay'   => $overlay_index['unique'],
+        'olcUniqueURI' => $::openldap::server::unique_uris,
       }),
       require    => Openldap['cn=module{0},cn=config'],
     }
