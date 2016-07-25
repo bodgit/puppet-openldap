@@ -96,6 +96,10 @@ class openldap::server::config {
       true    => 'smbk5pwd',
       default => '',
     },
+    $::openldap::server::ppolicy ? {
+      true => 'ppolicy',
+      default => '',
+    }
   ]
 
   $overlays = reject($overlay_candidates, '^\s*$')
@@ -382,5 +386,27 @@ class openldap::server::config {
       }),
       require    => Openldap['cn=module{0},cn=config'],
     }
+  }
+
+  if $::openldap::server::ppolicy {
+
+    openldap { "olcOverlay=${overlay_index['ppolicy']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+      ensure     => present,
+      attributes => delete_undef_values({
+        'objectClass'              => [
+          'olcOverlayConfig',
+          'olcPPolicyConfig',
+        ],
+        'olcOverlay'               => 'ppolicy',
+        'olcPPolicyDefault'        => "cn=passwordDefault,${::openldap::server::suffix}",# lint:ignore:80chars
+        'olcPPolicyHashCleartext'  => $::openldap::server::pp_hash_cleartext,
+        'olcPPolicyUseLockout'     => $::openldap::server::pp_use_lockout,
+        'olcPPolicyForwardUpdates' => $::openldap::server::pp_forward_updates,
+      }),
+      require                      => [
+        Openldap['cn=module{0},cn=config'],
+        Openldap::Server::Schema['ppolicy'],
+      ]
+   }
   }
 }

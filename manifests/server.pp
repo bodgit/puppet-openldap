@@ -33,6 +33,10 @@ class openldap::server (
   $module_extension          = $::openldap::params::module_extension,
   $package_name              = $::openldap::params::server_package_name,
   $pid_file                  = $::openldap::params::pid_file,
+  $ppolicy                   = false,
+  $pp_hash_cleartext         = undef,
+  $pp_use_lockout            = undef,
+  $pp_forward_updates        = undef,
   $replica_dn                = undef,
   $schema_dir                = $::openldap::params::schema_dir,
   $security                  = undef,
@@ -115,6 +119,11 @@ class openldap::server (
   }
   validate_string($package_name)
   validate_absolute_path($pid_file)
+  if $ppolicy {
+    validate_re($pp_hash_cleartext, '^TRUE$|^FALSE$')
+    validate_re($pp_use_lockout, '^TRUE$|^FALSE$')
+    validate_re($pp_forward_updates, '^TRUE$|^FALSE$')
+  }
   validate_absolute_path($schema_dir)
   if $security {
     validate_re($security, '^\w+=\d+(?:\s+\w+=\d+)*$')

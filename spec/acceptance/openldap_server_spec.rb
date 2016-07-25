@@ -62,6 +62,10 @@ describe 'openldap::server' do
         ],
         auditlog             => true,
         auditlog_file        => '/tmp/auditlog.ldif',
+        ppolicy              => true,
+        pp_hash_cleartext    => 'TRUE',
+        pp_use_lockout       => 'FALSE',
+        pp_forward_updates   => 'FALSE',
         data_cachesize       => 100,
         data_checkpoint      => '1 1',
         data_db_config       => [
@@ -96,6 +100,11 @@ describe 'openldap::server' do
         ldif     => '#{samba_schema}',
         position => 4,
       }
+
+      ::openldap::server::schema { 'ppolicy':
+        position => 5,
+      }
+
       package { '#{db_package}':
         ensure => present,
       }
@@ -161,12 +170,14 @@ describe 'openldap::server' do
         dn: cn={2}inetorgperson,cn=schema,cn=config
         dn: cn={3}nis,cn=schema,cn=config
         dn: cn={4}samba,cn=schema,cn=config
+        dn: cn={5}ppolicy,cn=schema,cn=config
         dn: olcDatabase={-1}frontend,cn=config
         dn: olcDatabase={0}config,cn=config
         dn: olcDatabase={1}monitor,cn=config
         dn: olcDatabase={2}hdb,cn=config
         dn: olcOverlay={0}auditlog,olcDatabase={2}hdb,cn=config
         dn: olcOverlay={1}smbk5pwd,olcDatabase={2}hdb,cn=config
+        dn: olcOverlay={2}ppolicy,olcDatabase={2}hdb,cn=config
       EOS
     end
   end
@@ -186,13 +197,25 @@ describe 'openldap::server' do
     its(:stdout) { should match /^result: 4 Size limit exceeded$/ }
   end
 
-  # Test password change
+  # Test that the ppolicy overlay can be added into {2}hdb
+  describe command("ldapadd -Y EXTERNAL -H ldapi:/// -f /root/ppolicy_overlay.ldif") do
+    its(:exit_status) { should eq 0 }
+  end
+
+  # Test that the ppolicy overlay is enforced with a pw change
+  # that is under the char limit
   describe command("ldappasswd -H ldap://#{default.ip}/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s secret") do
+    its(:exit_status) { should eq 1 }
+    its(:stdout) { should match /Password fails quality checking policy/ }
+  end
+
+  # Test password change that satifies the ppolicy overlay
+  describe command("ldappasswd -H ldap://#{default.ip}/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s verysecret") do
     its(:exit_status) { should eq 0 }
   end
 
   # Test that TCP works, binds work, and that no password hashes are disclosed
-  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w secret -z max") do
+  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w verysecret -z max") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should_not match /^userPassword/ }
     its(:stdout) { should_not match /^sambaLMPassword/ }

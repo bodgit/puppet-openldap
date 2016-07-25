@@ -73,7 +73,10 @@ describe 'openldap::server' do
 
   context 'with openldap::client class included' do
     let(:pre_condition) do
-      'include ::openldap include ::openldap::client'
+      [
+        'include ::openldap include ::openldap::client',
+        "openldap::server::schema { 'ppolicy': position => 1 }",
+      ]
     end
 
     on_supported_os.each do |os, facts|
@@ -391,6 +394,84 @@ describe 'openldap::server' do
                 'objectClass'   => ['olcModuleList'],
                 'olcModuleLoad' => [
                   '{0}syncprov.la',
+                ],
+              }
+            ) }
+          end
+        end
+
+        context 'with ppolicy enabled', :compile do
+          let(:params) do
+            super().merge(
+              {
+                :ppolicy            => true,
+                :pp_hash_cleartext  => 'TRUE',
+                :pp_use_lockout     => 'FALSE',
+                :pp_forward_updates => 'FALSE',
+              }
+            )
+          end
+
+          it_behaves_like "openldap::server on #{facts[:osfamily]}"
+
+          it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config').with_attributes(
+            {
+              'objectClass'  => [
+                'olcDatabaseConfig',
+                'olcFrontendConfig',
+              ],
+              'olcDatabase'  => ['{-1}frontend'],
+            }
+          ) }
+          it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage'],
+              'olcDatabase'    => ['{2}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/data'],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'      => ['secret'],
+              'olcSuffix'      => ['dc=example,dc=com'],
+            }
+          ) }
+          it { should contain_openldap('olcOverlay={0}ppolicy,olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'     => [
+                'olcOverlayConfig',
+                'olcPPolicyConfig',
+              ],
+              'olcOverlay'               => ['ppolicy'],
+              'olcPPolicyDefault'        => ['cn=passwordDefault,dc=example,dc=com'],
+              'olcPPolicyHashCleartext'  => ['TRUE'],
+              'olcPPolicyUseLockout'     => ['FALSE'],
+              'olcPPolicyForwardUpdates' => ['FALSE'],
+            }
+          ) }
+
+          case facts[:osfamily]
+          when 'Debian'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_monitor.la',
+                  '{1}back_hdb.la',
+                  '{2}ppolicy.la',
+                ],
+              }
+            ) }
+          when 'RedHat'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}ppolicy.la',
                 ],
               }
             ) }
