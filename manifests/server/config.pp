@@ -79,26 +79,24 @@ class openldap::server::config {
     }),
   }
 
-  $overlay_candidates = [
+  $overlays = delete_undef_values([
     $::openldap::server::syncprov ? {
       true    => 'syncprov',
-      default => '',
+      default => undef,
     },
     $::openldap::server::accesslog ? {
       true    => 'accesslog',
-      default => '',
+      default => undef,
     },
     $::openldap::server::auditlog ? {
       true    => 'auditlog',
-      default => '',
+      default => undef,
     },
     $::openldap::server::smbk5pwd ? {
       true    => 'smbk5pwd',
-      default => '',
+      default => undef,
     },
-  ]
-
-  $overlays = reject($overlay_candidates, '^\s*$')
+  ])
 
   # Creates a hash based on the enabled overlays pointing to their intended
   # position on the database. So for example if only the 'syncprov' and
@@ -110,18 +108,16 @@ class openldap::server::config {
   # }
   $overlay_index = hash(flatten(zip($overlays, openldap_values($overlays))))
 
-  $backend_candidates = [
+  $modules = flatten([delete_undef_values([
     member($backend_modules, 'monitor') ? {
       true    => 'back_monitor',
-      default => '',
+      default => undef,
     },
     member($backend_modules, $db_backend) ? {
       true    => "back_${db_backend}",
-      default => '',
+      default => undef,
     },
-  ]
-
-  $modules = flatten([reject($backend_candidates, '^\s*$'), $overlays])
+  ]), $overlays])
 
   # Convert ['module1', 'module2'] into ['{0}module1.la', '{1}module2.la']
   $module_load = suffix(openldap_values($modules), $module_extension)

@@ -29,6 +29,7 @@ class openldap (
   $tls_crlfile                   = undef,
 ) inherits ::openldap::params {
 
+  validate_string($package_name)
   validate_absolute_path($conf_dir)
   validate_absolute_path($ldap_conf_file)
 
