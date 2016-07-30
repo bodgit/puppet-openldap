@@ -61,8 +61,10 @@ class openldap::server (
   }
 
   validate_string($root_dn)
+  validate_ldap_dn($root_dn)
   validate_string($root_password)
   validate_string($suffix)
+  validate_ldap_dn($suffix)
 
   validate_array($access)
   validate_bool($accesslog)
@@ -153,6 +155,7 @@ class openldap::server (
   validate_bool($syncprov)
   if $syncprov {
     validate_string($replica_dn)
+    validate_ldap_dn($replica_dn)
     validate_re($syncprov_checkpoint, '^\d+\s+\d+$')
     validate_integer($syncprov_sessionlog)
   }
@@ -164,6 +167,7 @@ class openldap::server (
   }
   if $update_ref {
     validate_array($update_ref)
+    validate_ldap_uri($update_ref)
   }
   validate_string($user)
 

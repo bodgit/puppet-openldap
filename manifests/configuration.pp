@@ -45,12 +45,15 @@ define openldap::configuration (
 
   if $base {
     validate_string($base)
+    validate_ldap_dn($base)
   }
   if $uri {
     validate_array($uri)
+    validate_ldap_uri($uri)
   }
   if $binddn {
     validate_string($binddn)
+    validate_ldap_dn($binddn)
   }
   if $deref {
     validate_re($deref, '^(?:never|searching|finding|always)$')
