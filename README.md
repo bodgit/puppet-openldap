@@ -23,6 +23,10 @@ Tested with Travis CI
         * [Defined Type: openldap::server::schema](#defined-type-openldapserverschema)
     * [Native Types](#native-types)
         * [Native Type: openldap](#native-type-openldap)
+    * [Functions](#functions)
+        * [Function: openldap_unique_indices](#function-openldap_unique_indices)
+        * [Function: openldap_values](#function-openldap_values)
+        * [Function: validate_openldap_unique_uri](#function-validate_openldap_unique_uri)
     * [Examples](#examples)
 5. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
 5. [Limitations - OS compatibility, etc.](#limitations)
@@ -437,6 +441,17 @@ relationship between this server and a producer.
 Specify the maximum number of seconds `slapd` will spend answering a search
 request. Maps to the `olcTimeLimit` attribute set on the `frontend` database.
 
+##### `unique`
+
+Setting this to `true` will enable the `unique` overlay on the main database
+allowing the enforcement of attribute value uniqueness.
+
+##### `unique_uri`
+
+Maps to the `olcUniqueURI` attribute. Values are validated with the
+[`validate_openldap_unique_uri`](#function-validate_openldap_unique_uri)
+function.
+
 ##### `update_ref`
 
 An array of referral URIs to return for referring writes from a read-only
@@ -675,6 +690,34 @@ The name of the service controlling the `slapd` daemon. In order to affect
 change the daemon needs to be running first. The service resource will be
 autorequired.
 
+### Functions
+
+#### Function: `openldap_unique_indices`
+
+Canonicalise and unique an array of index directives.
+
+~~~
+openldap_unique_indices(['entryCSN,entryUUID eq', 'ou,cn eq,pres,sub', 'entryCSN eq', 'entryUUID eq'])
+~~~
+
+#### Function: `openldap_values`
+
+Prefix an array of values with positional `{x}` notation.
+
+~~~
+openldap_values(['foo', 'bar'])
+~~~
+
+#### Function: `validate_openldap_unique_uri`
+
+Validate an array of LDAP URI values suitable for configuring the `unique`
+overlay.
+
+~~~
+validate_openldap_unique_uri('dc=example,dc=com', ['ldap:///?uidNumber?sub'])
+validate_openldap_unique_uri('dc=example,dc=com', ['ldap:///ou=people,dc=example,dc=com?uidNumber?sub'])
+~~~
+
 ### Examples
 
 Install the LDAP libraries and create a global `ldap.conf` mimicking the stock
@@ -912,6 +955,16 @@ package { 'samba':
 
 * [`openldap`](#native-type-openldap): Manages a configuration object in the
   `slapd` OLC (`cn=config`) DIT.
+
+### Functions
+
+* [`openldap_unique_indices`](#function-openldap_unique_indices): Canonicalises
+  and uniques a set of indices.
+* [`openldap_values`](#function-openldap_values): Adds a positional `{x}`
+  prefix to an array of values.
+* [`validate_openldap_unique_uri`](#function-validate_openldap_unique_uri):
+  Validates an array of URI values suitable for configuring the `unique`
+  overlay.
 
 ## Limitations
 
