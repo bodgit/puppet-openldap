@@ -189,6 +189,7 @@ describe 'openldap::server' do
                 'cn'          => ['config'],
                 'objectClass' => ['olcGlobal'],
                 'olcArgsFile' => ['/var/run/slapd/slapd.args'],
+                'olcLocalSSF' => ['256'],
                 'olcLogLevel' => ['128 filter 0x1'],
                 'olcPidFile'  => ['/var/run/slapd/slapd.pid'],
               }
@@ -210,6 +211,7 @@ describe 'openldap::server' do
                 'cn'          => ['config'],
                 'objectClass' => ['olcGlobal'],
                 'olcArgsFile' => ['/var/run/openldap/slapd.args'],
+                'olcLocalSSF' => ['256'],
                 'olcLogLevel' => ['128 filter 0x1'],
                 'olcPidFile'  => ['/var/run/openldap/slapd.pid'],
               }

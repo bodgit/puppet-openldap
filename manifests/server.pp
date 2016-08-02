@@ -33,7 +33,7 @@ class openldap::server (
   $ldap_interfaces           = $::openldap::params::ldap_interfaces,
   $ldaps_interfaces          = $::openldap::params::ldaps_interfaces,
   $limits                    = [],
-  $local_ssf                 = undef,
+  $local_ssf                 = $::openldap::params::local_ssf,
   $log_level                 = $::openldap::params::log_level,
   $module_extension          = $::openldap::params::module_extension,
   $package_name              = $::openldap::params::server_package_name,

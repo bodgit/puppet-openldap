@@ -345,7 +345,9 @@ automatically when the `syncprov` parameter is used.
 
 ##### `local_ssf`
 
-Security strength factor assigned to `ldapi` connections.
+Security strength factor assigned to `ldapi` connections. This defaults to 256
+which is a safeguard to prevent locking the Puppet agent out as it uses this
+connection to manipulate the configuration.
 
 ##### `log_level`
 
