@@ -186,8 +186,8 @@ class openldap::server::config {
   # syncprov overlay is required, i.e. this is a master/producer
   if $::openldap::server::syncprov {
 
-    $replica_access   = "to * by dn.exact=\"${replica_dn}\" read"
-    $replica_limits   = "dn.exact=\"${replica_dn}\" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited" # lint:ignore:80chars
+    $replica_access = "to * by dn.exact=\"${replica_dn}\" read"
+    $replica_limits = "dn.exact=\"${replica_dn}\" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited" # lint:ignore:80chars
 
     # Prepend replica ACL to any on the main database and also create indices
     # required by the overlay
