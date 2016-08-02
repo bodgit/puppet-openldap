@@ -101,6 +101,10 @@ class openldap::server::config {
       true    => 'unique',
       default => undef,
     },
+    $::openldap::server::ppolicy ? {
+      true    => 'ppolicy',
+      default => undef,
+    },
   ])
 
   # Creates a hash based on the enabled overlays pointing to their intended
@@ -434,6 +438,31 @@ class openldap::server::config {
         'olcUniqueURI' => $::openldap::server::unique_uri,
       }),
       require    => Openldap['cn=module{0},cn=config'],
+    }
+  }
+
+  if $::openldap::server::ppolicy {
+    $_ppolicy_hash_cleartext  = openldap_boolean($::openldap::server::ppolicy_hash_cleartext) # lint:ignore:80chars
+    $_ppolicy_use_lockout     = openldap_boolean($::openldap::server::ppolicy_use_lockout) # lint:ignore:80chars
+    $_ppolicy_forward_updates = openldap_boolean($::openldap::server::ppolicy_forward_updates) # lint:ignore:80chars
+
+    openldap { "olcOverlay=${overlay_index['ppolicy']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+      ensure     => present,
+      attributes => delete_undef_values({
+        'objectClass'              => [
+          'olcOverlayConfig',
+          'olcPPolicyConfig',
+        ],
+        'olcOverlay'               => $overlay_index['ppolicy'],
+        'olcPPolicyDefault'        => $::openldap::server::ppolicy_default,
+        'olcPPolicyHashCleartext'  => $_ppolicy_hash_cleartext,
+        'olcPPolicyUseLockout'     => $_ppolicy_use_lockout,
+        'olcPPolicyForwardUpdates' => $_ppolicy_forward_updates,
+      }),
+      require    => [
+        Openldap['cn=module{0},cn=config'],
+        Openldap::Server::Schema['ppolicy'],
+      ],
     }
   }
 }

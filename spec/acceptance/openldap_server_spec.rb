@@ -52,35 +52,40 @@ describe 'openldap::server' do
       include ::openldap
       include ::openldap::client
       class { '::openldap::server':
-        root_dn              => 'cn=Manager,dc=example,dc=com',
-        root_password        => 'secret',
-        suffix               => 'dc=example,dc=com',
-        access               => [
+        root_dn                 => 'cn=Manager,dc=example,dc=com',
+        root_password           => 'secret',
+        suffix                  => 'dc=example,dc=com',
+        access                  => [
           'to attrs=userPassword by self =xw by anonymous auth',
           'to attrs=sambaLMPassword,sambaNTPassword by self =w',
           'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by users read',
         ],
-        auditlog             => true,
-        auditlog_file        => '/tmp/auditlog.ldif',
-        data_cachesize       => 100,
-        data_checkpoint      => '1 1',
-        data_db_config       => [
+        auditlog                => true,
+        auditlog_file           => '/tmp/auditlog.ldif',
+        data_cachesize          => 100,
+        data_checkpoint         => '1 1',
+        data_db_config          => [
           'set_cachesize 0 2097152 0',
           'set_lk_max_objects 1500',
           'set_lk_max_locks 1500',
           'set_lk_max_lockers 1500',
         ],
-        data_dn_cachesize    => 100,
-        data_index_cachesize => 300,
-        ldap_interfaces      => ['#{default.ip}'],
-        local_ssf            => 256,
-        log_level            => 65535,
-        size_limit           => 'size.soft=1 size.hard=unlimited',
-        smbk5pwd             => true,
-        smbk5pwd_backends    => ['samba'],
-        unique               => true,
-        unique_uri           => ['ldap:///dc=example,dc=com?uidNumber?sub'],
-        require              => Class['::rsyslog::client'],
+        data_dn_cachesize       => 100,
+        data_index_cachesize    => 300,
+        ldap_interfaces         => ['#{default.ip}'],
+        local_ssf               => 256,
+        log_level               => 65535,
+        ppolicy                 => true,
+        ppolicy_default         => 'cn=passwordDefault,dc=example,dc=com',
+        ppolicy_forward_updates => false,
+        ppolicy_hash_cleartext  => true,
+        ppolicy_use_lockout     => false,
+        size_limit              => 'size.soft=1 size.hard=unlimited',
+        smbk5pwd                => true,
+        smbk5pwd_backends       => ['samba'],
+        unique                  => true,
+        unique_uri              => ['ldap:///dc=example,dc=com?uidNumber?sub'],
+        require                 => Class['::rsyslog::client'],
       }
       ::openldap::server::schema { 'cosine':
         position => 1,
@@ -91,13 +96,18 @@ describe 'openldap::server' do
       ::openldap::server::schema { 'nis':
         position => 3,
       }
+      ::openldap::server::schema { 'ppolicy':
+        position => 4,
+      }
+
       package { '#{samba_package}':
         ensure => present,
       }
       ::openldap::server::schema { 'samba':
         ldif     => '#{samba_schema}',
-        position => 4,
+        position => 5,
       }
+
       package { '#{db_package}':
         ensure => present,
       }
@@ -162,7 +172,8 @@ describe 'openldap::server' do
         dn: cn={1}cosine,cn=schema,cn=config
         dn: cn={2}inetorgperson,cn=schema,cn=config
         dn: cn={3}nis,cn=schema,cn=config
-        dn: cn={4}samba,cn=schema,cn=config
+        dn: cn={4}ppolicy,cn=schema,cn=config
+        dn: cn={5}samba,cn=schema,cn=config
         dn: olcDatabase={-1}frontend,cn=config
         dn: olcDatabase={0}config,cn=config
         dn: olcDatabase={1}monitor,cn=config
@@ -170,6 +181,7 @@ describe 'openldap::server' do
         dn: olcOverlay={0}auditlog,olcDatabase={2}hdb,cn=config
         dn: olcOverlay={1}smbk5pwd,olcDatabase={2}hdb,cn=config
         dn: olcOverlay={2}unique,olcDatabase={2}hdb,cn=config
+        dn: olcOverlay={3}ppolicy,olcDatabase={2}hdb,cn=config
       EOS
     end
   end
@@ -189,13 +201,25 @@ describe 'openldap::server' do
     its(:stdout) { should match /^result: 4 Size limit exceeded$/ }
   end
 
-  # Test password change
+  # Test that the ppolicy overlay can be added into {2}hdb
+  describe command("ldapadd -Y EXTERNAL -H ldapi:/// -f /root/ppolicy.ldif") do
+    its(:exit_status) { should eq 0 }
+  end
+
+  # Test that the ppolicy overlay is enforced with a pw change
+  # that is under the char limit
   describe command("ldappasswd -H ldap://#{default.ip}/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s secret") do
+    its(:exit_status) { should eq 1 }
+    its(:stdout) { should match /Password fails quality checking policy/ }
+  end
+
+  # Test password change that satifies the ppolicy overlay
+  describe command("ldappasswd -H ldap://#{default.ip}/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s verysecret") do
     its(:exit_status) { should eq 0 }
   end
 
   # Test that TCP works, binds work, and that no password hashes are disclosed
-  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w secret -z max") do
+  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w verysecret -z max") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should_not match /^userPassword/ }
     its(:stdout) { should_not match /^sambaLMPassword/ }
