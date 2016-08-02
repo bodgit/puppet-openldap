@@ -455,8 +455,8 @@ function.
 
 ##### `update_ref`
 
-An array of referral URIs to return for referring writes from a read-only
-replica server to the original producer/master server.
+A referral URI to return for referring writes from a read-only replica server
+to the original producer/master server.
 
 ##### `user`
 
@@ -879,7 +879,7 @@ class { '::openldap::server':
   syncrepl        => [
     'rid=001 provider=ldap://ldap.example.com/ searchbase="dc=example,dc=com" bindmethod=simple binddn="cn=replicator,dc=example,dc=com" credentials=secret logbase="cn=log" logfilter="(&(objectClass=auditWriteObject)(reqResult=0))" schemachecking=on type=refreshAndPersist retry="60 +" syncdata=accesslog',
   ],
-  update_ref      => ['ldap://ldap.example.com/'],
+  update_ref      => 'ldap://ldap.example.com/',
 }
 ::openldap::server::schema { 'cosine':
   position => 1,

@@ -304,7 +304,7 @@ class openldap::server::config {
       'olcSuffix'         => $::openldap::server::suffix,
       # slave/consumer
       'olcSyncrepl'       => openldap_values($::openldap::server::syncrepl),
-      'olcUpdateRef'      => openldap_values($::openldap::server::update_ref),
+      'olcUpdateRef'      => $::openldap::server::update_ref,
     }),
     require    => Openldap['cn=module{0},cn=config'],
   }

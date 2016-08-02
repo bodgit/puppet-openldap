@@ -173,7 +173,7 @@ class openldap::server (
     validate_openldap_unique_uri($suffix, $unique_uri)
   }
   if $update_ref {
-    validate_array($update_ref)
+    validate_string($update_ref)
     validate_ldap_uri($update_ref)
   }
   validate_string($user)
