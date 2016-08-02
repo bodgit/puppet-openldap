@@ -174,6 +174,11 @@ class openldap::server::config {
   }
 
   if $::openldap::server::chain {
+    $_chain_return_error = $::openldap::server::chain_return_error ? {
+      undef   => undef,
+      default => bool2str($::openldap::server::chain_return_error, 'TRUE', 'FALSE'), # lint:ignore:80chars
+    }
+
     openldap { 'olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config':
       ensure     => present,
       attributes => delete_undef_values({
@@ -182,9 +187,14 @@ class openldap::server::config {
           'olcChainConfig',
         ],
         'olcOverlay'          => '{0}chain',
-        'olcChainReturnError' => openldap_boolean($::openldap::server::chain_return_error), # lint:ignore:80chars
+        'olcChainReturnError' => $_chain_return_error,
       }),
       require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    $_chain_rebind_as_user = $::openldap::server::chain_rebind_as_user ? {
+      undef   => undef,
+      default => bool2str($::openldap::server::chain_rebind_as_user, 'TRUE', 'FALSE'), # lint:ignore:80chars
     }
 
     openldap { 'olcDatabase={0}ldap,olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config': # lint:ignore:80chars
@@ -196,7 +206,7 @@ class openldap::server::config {
         ],
         'olcDatabase'       => '{0}ldap',
         'olcDbURI'          => $::openldap::server::update_ref,
-        'olcDbRebindAsUser' => openldap_boolean($::openldap::server::chain_rebind_as_user), # lint:ignore:80chars
+        'olcDbRebindAsUser' => $_chain_rebind_as_user,
         'olcDbIDAssertBind' => $::openldap::server::chain_id_assert_bind,
       }),
     }
@@ -442,9 +452,18 @@ class openldap::server::config {
   }
 
   if $::openldap::server::ppolicy {
-    $_ppolicy_hash_cleartext  = openldap_boolean($::openldap::server::ppolicy_hash_cleartext) # lint:ignore:80chars
-    $_ppolicy_use_lockout     = openldap_boolean($::openldap::server::ppolicy_use_lockout) # lint:ignore:80chars
-    $_ppolicy_forward_updates = openldap_boolean($::openldap::server::ppolicy_forward_updates) # lint:ignore:80chars
+    $_ppolicy_hash_cleartext  = $::openldap::server::ppolicy_hash_cleartext ? {
+      undef   => undef,
+      default => bool2str($::openldap::server::ppolicy_hash_cleartext, 'TRUE', 'FALSE'), # lint:ignore:80chars
+    }
+    $_ppolicy_use_lockout     = $::openldap::server::ppolicy_use_lockout ? {
+      undef   => undef,
+      default => bool2str($::openldap::server::ppolicy_use_lockout, 'TRUE', 'FALSE'), # lint:ignore:80chars
+    }
+    $_ppolicy_forward_updates = $::openldap::server::ppolicy_forward_updates ? {
+      undef   => undef,
+      default => bool2str($::openldap::server::ppolicy_forward_updates, 'TRUE' ,'FALSE'), # lint:ignore:80chars
+    }
 
     openldap { "olcOverlay=${overlay_index['ppolicy']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
       ensure     => present,

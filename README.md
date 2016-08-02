@@ -24,7 +24,6 @@ Tested with Travis CI
     * [Native Types](#native-types)
         * [Native Type: openldap](#native-type-openldap)
     * [Functions](#functions)
-        * [Function: openldap_boolean](#function-openldap_boolean)
         * [Function: openldap_unique_indices](#function-openldap_unique_indices)
         * [Function: openldap_values](#function-openldap_values)
         * [Function: validate_openldap_unique_uri](#function-validate_openldap_unique_uri)
@@ -749,18 +748,6 @@ autorequired.
 
 ### Functions
 
-#### Function: `openldap_boolean`
-
-Turn boolean values into `TRUE`/`FALSE` strings as used by certain OpenLDAP
-attributes. `undef` is passed through unchanged to help keep logic
-straightforward.
-
-~~~
-openldap_boolean(undef)
-openldap_boolean(true)
-openldap_boolean(false)
-~~~
-
 #### Function: `openldap_unique_indices`
 
 Canonicalise and unique an array of index directives.
@@ -1027,8 +1014,6 @@ package { 'samba':
 
 ### Functions
 
-* [`openldap_boolean`](#function-openldap_boolean): Turn boolean values into
-  `TRUE`/`FALSE` strings.
 * [`openldap_unique_indices`](#function-openldap_unique_indices): Canonicalises
   and uniques a set of indices.
 * [`openldap_values`](#function-openldap_values): Adds a positional `{x}`
