@@ -15,7 +15,12 @@ class openldap::server (
   $args_file                 = $::openldap::params::args_file,
   $auditlog                  = false,
   $auditlog_file             = $::openldap::params::auditlog_file,
+  $authz_policy              = undef,
   $backend_modules           = $::openldap::params::backend_modules,
+  $chain                     = false,
+  $chain_id_assert_bind      = undef,
+  $chain_rebind_as_user      = undef,
+  $chain_return_error        = undef,
   $data_cachesize            = undef,
   $data_checkpoint           = undef,
   $data_db_config            = [],
@@ -83,12 +88,25 @@ class openldap::server (
   if $accesslog_index_cachesize {
     validate_integer($accesslog_index_cachesize)
   }
+  validate_absolute_path($args_file)
   validate_bool($auditlog)
   if $auditlog {
     validate_absolute_path($auditlog_file)
   }
-  validate_absolute_path($args_file)
+  if $authz_policy {
+    validate_re($authz_policy, '^(?:none|from|to|any|all)$')
+  }
   validate_array($backend_modules)
+  if $chain {
+    validate_bool($chain)
+    validate_string($chain_id_assert_bind)
+    if $chain_rebind_as_user {
+      validate_bool($chain_rebind_as_user)
+    }
+    if $chain_return_error {
+      validate_bool($chain_return_error)
+    }
+  }
   if $data_cachesize {
     validate_integer($data_cachesize)
   }
@@ -177,6 +195,10 @@ class openldap::server (
     validate_ldap_uri($update_ref)
   }
   validate_string($user)
+
+  if $chain and ! $update_ref {
+    fail('Chaining requires an update referral URL')
+  }
 
   include ::openldap::server::install
   include ::openldap::server::config

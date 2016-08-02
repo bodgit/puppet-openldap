@@ -245,10 +245,35 @@ Setting this to `true` will enable the `auditlog` overlay.
 
 The LDIF file where the `auditlog` overlay writes any changes.
 
+##### `authz_policy`
+
+Maps to the `olcAuthzPolicy` attribute, accepts one of `none`, `from`, `to`,
+`any`, or `all`.
+
 ##### `backend_modules`
 
 An array of database backends that are built as modules and therefore require
 loading before use.
+
+##### `chain`
+
+Setting this to `true` enables the `chain` overlay which transparently
+forwards writes to a slave/consumer on behalf of the client to the
+master/producer indicated by the configured update referral URI.
+
+##### `chain_id_assert_bind`
+
+Maps to the `olcDbIDAssertBind` attribute on the LDAP database used by the
+chain overlay.
+
+##### `chain_rebind_as_user`
+
+Maps to the `olcDbRebindAsUser` attribute on the LDAP database used by the
+chain overlay.
+
+##### `chain_return_error`
+
+Maps to the `olcChainReturnError` attribute on the chain overlay.
 
 ##### `data_cachesize`
 

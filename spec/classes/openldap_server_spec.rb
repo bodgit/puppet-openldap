@@ -964,6 +964,92 @@ describe 'openldap::server' do
             ) }
           end
         end
+
+        context 'as a consumer with chaining enabled', :compile do
+          let(:params) do
+            super().merge(
+              {
+                :chain                => true,
+                :chain_id_assert_bind => 'mode=self flags=proxy-authz-critical',
+                :chain_rebind_as_user => true,
+                :chain_return_error   => true,
+                :syncrepl             => [
+                  'rid=001 provider=ldap://ldap.example.com/',
+                ],
+                :update_ref           => 'ldap://ldap.example.com/',
+              }
+            )
+          end
+
+          it_behaves_like "openldap::server on #{facts[:osfamily]}"
+
+          it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config') }
+          it { should contain_openldap('olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config').with_attributes(
+            {
+              'objectClass'         => [
+                'olcOverlayConfig',
+                'olcChainConfig',
+              ],
+              'olcOverlay'          => ['{0}chain'],
+              'olcChainReturnError' => ['TRUE'],
+            }
+          ) }
+          it { should contain_openldap('olcDatabase={0}ldap,olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config').with_attributes(
+            {
+              'objectClass'       => [
+                'olcLDAPConfig',
+                'olcChainDatabase',
+              ],
+              'olcDatabase'       => ['{0}ldap'],
+              'olcDbURI'          => ['ldap://ldap.example.com/'],
+              'olcDbRebindAsUser' => ['TRUE'],
+              'olcDbIDAssertBind' => ['mode=self flags=proxy-authz-critical'],
+            }
+          ) }
+          it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage'],
+              'olcDatabase'    => ['{2}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/data'],
+              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'      => ['secret'],
+              'olcSuffix'      => ['dc=example,dc=com'],
+              'olcSyncrepl'    => ['{0}rid=001 provider=ldap://ldap.example.com/'],
+              'olcUpdateRef'   => ['ldap://ldap.example.com/'],
+            }
+          ) }
+
+          case facts[:osfamily]
+          when 'Debian'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_monitor.la',
+                  '{1}back_hdb.la',
+                  '{2}back_ldap.la',
+                ],
+              }
+            ) }
+          when 'RedHat'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'          => ['module{0}'],
+                'objectClass' => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_ldap.la',
+                ],
+              }
+            ) }
+          end
+        end
       end
     end
   end

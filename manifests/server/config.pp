@@ -65,6 +65,7 @@ class openldap::server::config {
       'cn'                       => 'config',
       'objectClass'              => 'olcGlobal',
       'olcArgsFile'              => $::openldap::server::args_file,
+      'olcAuthzPolicy'           => $::openldap::server::authz_policy,
       'olcLocalSSF'              => $::openldap::server::local_ssf,
       'olcLogLevel'              => $::openldap::server::log_level,
       'olcPidFile'               => $::openldap::server::pid_file,
@@ -121,6 +122,14 @@ class openldap::server::config {
       true    => "back_${db_backend}",
       default => undef,
     },
+    # If chaining is enabled then the ldap backend is required
+    $::openldap::server::chain ? {
+      true    => member($backend_modules, 'ldap') ? {
+        true    => 'back_ldap',
+        default => undef,
+      },
+      default => undef,
+    },
   ]), $overlays])
 
   # Convert ['module1', 'module2'] into ['{0}module1.la', '{1}module2.la']
@@ -158,6 +167,35 @@ class openldap::server::config {
       'olcSizeLimit' => $::openldap::server::size_limit,
       'olcTimeLimit' => $::openldap::server::time_limit,
     }),
+  }
+
+  if $::openldap::server::chain {
+    openldap { 'olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config':
+      ensure     => present,
+      attributes => delete_undef_values({
+        'objectClass'         => [
+          'olcOverlayConfig',
+          'olcChainConfig',
+        ],
+        'olcOverlay'          => '{0}chain',
+        'olcChainReturnError' => openldap_boolean($::openldap::server::chain_return_error), # lint:ignore:80chars
+      }),
+      require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    openldap { 'olcDatabase={0}ldap,olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config': # lint:ignore:80chars
+      ensure     => present,
+      attributes => delete_undef_values({
+        'objectClass'       => [
+          'olcLDAPConfig',
+          'olcChainDatabase',
+        ],
+        'olcDatabase'       => '{0}ldap',
+        'olcDbURI'          => $::openldap::server::update_ref,
+        'olcDbRebindAsUser' => openldap_boolean($::openldap::server::chain_rebind_as_user), # lint:ignore:80chars
+        'olcDbIDAssertBind' => $::openldap::server::chain_id_assert_bind,
+      }),
+    }
   }
 
   openldap { 'olcDatabase={0}config,cn=config':
