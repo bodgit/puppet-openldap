@@ -1,0 +1,7 @@
+dn: cn=passwordDefault,dc=example,dc=com
+objectClass: organizationalRole
+objectClass: pwdPolicy
+cn: passwordDefault
+pwdAttribute: userPassword
+pwdCheckQuality: 2
+pwdMinLength: 8

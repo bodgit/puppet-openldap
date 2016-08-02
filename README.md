@@ -338,6 +338,37 @@ The name of the package to install that provides the LDAP `slapd` daemon.
 
 Where `slapd` writes out its PID.
 
+##### `ppolicy`
+
+Setting this to `true` will enable the `ppolicy` overlay on the main database
+allowing the enforcement of password strength/complexity as well as account
+lockout. You will need to load the `ppolicy` schema otherwise attempting to
+enable this will fail.
+
+##### `ppolicy_default`
+
+A Distinguished Name of the default password policy object to use if a user
+does not have a `pwdPolicySubEntry` attribute. This must exist under the
+main suffix.
+
+##### `ppolicy_forward_updates`
+
+If this server is a consumer/slave this setting controls whether password
+policy operational attributes are written locally or forwarded to the
+producer/master, (which means they can come back via replication). This
+requires enabling the `chain` overlay.
+
+##### `ppolicy_hash_cleartext`
+
+Setting this to `true` forces cleartext passwords to be hashed when updated
+via Add or Modify operations. This is not necessary if the Password Modify
+extended operation is normally used.
+
+##### `ppolicy_use_lockout`
+
+Setting this to `true` makes a bind to a locked account return an
+`AccountLocked` error instead of `InvalidCredentials`.
+
 ##### `replica_dn`
 
 The Distinguished Name used by consumer/slave servers to connect to this
