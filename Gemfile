@@ -3,9 +3,6 @@
 source ENV['GEM_SOURCE'] || 'https://rubygems.org'
 
 group :development, :test do
-  gem 'json', '< 2.0.0',                                  :require => false
-  gem 'json_pure', '< 2.0.0',                             :require => false
-  gem 'tins', '< 1.7.0',                                  :require => false
   gem 'rake',                                             :require => false
   gem 'rspec',                                            :require => false
   gem 'rspec-puppet', '>= 2.2.0',                         :require => false
