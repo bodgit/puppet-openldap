@@ -274,6 +274,12 @@ chain overlay.
 
 Maps to the `olcChainReturnError` attribute on the chain overlay.
 
+##### `chain_tls`
+
+Maps to the `olcDbStartTLS` attribute on the LDAP database used by the chain
+overlay. See the `tls` entry in the `slapd-ldap` man page for more information
+on usage and accepted values.
+
 ##### `data_cachesize`
 
 Specify the size of the in-memory entry cache maintained by the `bdb` or

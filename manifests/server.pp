@@ -21,6 +21,7 @@ class openldap::server (
   $chain_id_assert_bind      = undef,
   $chain_rebind_as_user      = undef,
   $chain_return_error        = undef,
+  $chain_tls                 = undef,
   $data_cachesize            = undef,
   $data_checkpoint           = undef,
   $data_db_config            = [],
@@ -110,6 +111,9 @@ class openldap::server (
     }
     if $chain_return_error {
       validate_bool($chain_return_error)
+    }
+    if $chain_tls {
+      validate_string($chain_tls)
     }
   }
   if $data_cachesize {

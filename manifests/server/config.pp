@@ -208,6 +208,7 @@ class openldap::server::config {
         'olcDbURI'          => $::openldap::server::update_ref,
         'olcDbRebindAsUser' => $_chain_rebind_as_user,
         'olcDbIDAssertBind' => $::openldap::server::chain_id_assert_bind,
+        'olcDbStartTLS'     => $::openldap::server::chain_tls,
       }),
     }
   }
