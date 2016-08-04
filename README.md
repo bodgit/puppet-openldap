@@ -444,11 +444,11 @@ Maps to the `olcTLSCACertificateFile` attribute.
 
 ##### `ssl_cert`
 
-Maps to the `olcTLSCACertificatePath` attribute.
+Maps to the `olcTLSCertificateFile` attribute.
 
 ##### `ssl_certs_dir`
 
-Maps to the `olcTLSCertificateFile` attribute.
+Maps to the `olcTLSCACertificatePath` attribute.
 
 ##### `ssl_cipher`
 
