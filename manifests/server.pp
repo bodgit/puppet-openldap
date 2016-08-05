@@ -207,8 +207,10 @@ class openldap::server (
   }
   validate_bool($unique)
   if $unique {
-    validate_array($unique_uri)
-    validate_openldap_unique_uri($suffix, $unique_uri)
+    if $unique_uri {
+      validate_array($unique_uri)
+      validate_openldap_unique_uri($suffix, $unique_uri)
+    }
   }
   if $update_ref {
     validate_string($update_ref)
