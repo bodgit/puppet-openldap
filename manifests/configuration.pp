@@ -116,7 +116,7 @@ define openldap::configuration (
     validate_string($tls_cipher_suite)
   }
   if $tls_protocol_min {
-    validate_number($tls_protocol_min)
+    validate_numeric($tls_protocol_min, '', 0)
   }
   if $tls_randfile {
     validate_absolute_path($tls_randfile)

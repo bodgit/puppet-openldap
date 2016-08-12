@@ -8,10 +8,11 @@ describe 'openldap::configuration' do
 
   let(:params) do
     {
-      :ensure => 'file',
-      :owner  => 0,
-      :group  => 0,
-      :mode   => '0644',
+      :ensure           => 'file',
+      :owner            => 0,
+      :group            => 0,
+      :mode             => '0644',
+      :tls_protocol_min => '3.2',
     }
   end
 
@@ -35,6 +36,7 @@ describe 'openldap::configuration' do
       should contain_file('/tmp/ldap.conf').with_content(<<-EOS.gsub(/^ +/, ''))
         # !!! Managed by Puppet !!!
 
+        TLS_PROTOCOL_MIN		3.2
       EOS
     end
     it { should contain_openldap__configuration('/tmp/ldap.conf') }

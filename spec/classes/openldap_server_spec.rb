@@ -54,9 +54,10 @@ describe 'openldap::server' do
 
   let(:params) do
     {
-      'root_dn'       => 'cn=Manager,dc=example,dc=com',
-      'root_password' => 'secret',
-      'suffix'        => 'dc=example,dc=com',
+      :root_dn       => 'cn=Manager,dc=example,dc=com',
+      :root_password => 'secret',
+      :suffix        => 'dc=example,dc=com',
+      :ssl_protocol  => '3.2',
     }
   end
 
@@ -186,12 +187,13 @@ describe 'openldap::server' do
           when 'Debian'
             it { should contain_openldap('cn=config').with_attributes(
               {
-                'cn'          => ['config'],
-                'objectClass' => ['olcGlobal'],
-                'olcArgsFile' => ['/var/run/slapd/slapd.args'],
-                'olcLocalSSF' => ['256'],
-                'olcLogLevel' => ['128 filter 0x1'],
-                'olcPidFile'  => ['/var/run/slapd/slapd.pid'],
+                'cn'                => ['config'],
+                'objectClass'       => ['olcGlobal'],
+                'olcArgsFile'       => ['/var/run/slapd/slapd.args'],
+                'olcLocalSSF'       => ['256'],
+                'olcLogLevel'       => ['128 filter 0x1'],
+                'olcPidFile'        => ['/var/run/slapd/slapd.pid'],
+                'olcTLSProtocolMin' => ['3.2'],
               }
             ) }
             it { should contain_openldap('cn=module{0},cn=config').with_attributes(
@@ -208,12 +210,13 @@ describe 'openldap::server' do
           when 'RedHat'
             it { should contain_openldap('cn=config').with_attributes(
               {
-                'cn'          => ['config'],
-                'objectClass' => ['olcGlobal'],
-                'olcArgsFile' => ['/var/run/openldap/slapd.args'],
-                'olcLocalSSF' => ['256'],
-                'olcLogLevel' => ['128 filter 0x1'],
-                'olcPidFile'  => ['/var/run/openldap/slapd.pid'],
+                'cn'                => ['config'],
+                'objectClass'       => ['olcGlobal'],
+                'olcArgsFile'       => ['/var/run/openldap/slapd.args'],
+                'olcLocalSSF'       => ['256'],
+                'olcLogLevel'       => ['128 filter 0x1'],
+                'olcPidFile'        => ['/var/run/openldap/slapd.pid'],
+                'olcTLSProtocolMin' => ['3.2'],
               }
             ) }
             it { should contain_openldap('cn=module{0},cn=config').with_attributes(

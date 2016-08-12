@@ -190,7 +190,7 @@ class openldap::server (
     validate_absolute_path($ssl_key)
   }
   if $ssl_protocol {
-    validate_number($ssl_protocol)
+    validate_numeric($ssl_protocol, '', 0)
   }
   validate_bool($syncprov)
   if $syncprov {
