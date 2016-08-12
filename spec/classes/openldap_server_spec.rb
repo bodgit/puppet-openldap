@@ -387,10 +387,6 @@ describe 'openldap::server' do
         end
 
         context 'with ppolicy enabled', :compile do
-          let(:pre_condition) do
-            super() + ' ::openldap::server::schema { "ppolicy": position => 1 }'
-          end
-
           let(:params) do
             super().merge(
               {
@@ -406,7 +402,6 @@ describe 'openldap::server' do
           it_behaves_like "openldap::server on #{facts[:osfamily]}"
 
           it { should contain_openldap('cn=config') }
-          it { should contain_openldap('cn={1}ppolicy,cn=schema,cn=config') }
           it { should contain_openldap('olcDatabase={-1}frontend,cn=config').with_attributes(
             {
               'objectClass'  => [
@@ -457,7 +452,6 @@ describe 'openldap::server' do
                 ],
               }
             ) }
-            it { should contain_openldap__server__schema('ppolicy').with_ldif('/etc/ldap/schema/ppolicy.ldif') }
           when 'RedHat'
             it { should contain_openldap('cn=module{0},cn=config').with_attributes(
               {
@@ -468,7 +462,6 @@ describe 'openldap::server' do
                 ],
               }
             ) }
-            it { should contain_openldap__server__schema('ppolicy').with_ldif('/etc/openldap/schema/ppolicy.ldif') }
           end
         end
 

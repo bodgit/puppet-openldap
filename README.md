@@ -369,8 +369,8 @@ Where `slapd` writes out its PID.
 
 Setting this to `true` will enable the `ppolicy` overlay on the main database
 allowing the enforcement of password strength/complexity as well as account
-lockout. You will need to load the `ppolicy` schema otherwise attempting to
-enable this will fail.
+lockout. You will need to ensure the `ppolicy` schema is loaded before you
+try and create or load any policies.
 
 ##### `ppolicy_default`
 

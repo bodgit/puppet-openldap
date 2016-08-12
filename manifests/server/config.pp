@@ -478,10 +478,7 @@ class openldap::server::config {
         'olcPPolicyUseLockout'     => $_ppolicy_use_lockout,
         'olcPPolicyForwardUpdates' => $_ppolicy_forward_updates,
       }),
-      require    => [
-        Openldap['cn=module{0},cn=config'],
-        Openldap::Server::Schema['ppolicy'],
-      ],
+      require    => Openldap['cn=module{0},cn=config'],
     }
   }
 }
