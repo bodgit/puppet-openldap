@@ -112,9 +112,7 @@ class openldap::server (
     if $chain_return_error {
       validate_bool($chain_return_error)
     }
-    if $chain_tls {
-      validate_string($chain_tls)
-    }
+    validate_string($chain_tls)
   }
   if $data_cachesize {
     validate_integer($data_cachesize)
