@@ -2,7 +2,7 @@
 define openldap::server::schema (
   $position,
   $attributes = {},
-  $ldif       = "${::openldap::server::schema_dir}/${name}.ldif",
+  $ldif       = undef,
   $purge      = false,
 ) {
 
@@ -10,16 +10,24 @@ define openldap::server::schema (
     fail('You must include the openldap::server class before using any openldap defined resources') # lint:ignore:80chars
   }
 
-  validate_integer($position)
-  if $ldif {
-    validate_string($ldif)
+  $minimum_position = $caller_module_name ? {
+    $module_name => 0,
+    default      => 1,
   }
+
+  validate_integer($position, '', $minimum_position)
+  validate_string($ldif)
   validate_bool($purge)
+
+  $_ldif = $ldif ? {
+    undef   => "${::openldap::server::schema_dir}/${name}.ldif",
+    default => $ldif,
+  }
 
   openldap { "cn={${position}}${name},cn=schema,cn=config":
     ensure     => present,
     attributes => delete_undef_values($attributes),
-    ldif       => $ldif,
+    ldif       => $_ldif,
     purge      => $purge,
   }
 

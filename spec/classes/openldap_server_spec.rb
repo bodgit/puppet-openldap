@@ -8,7 +8,6 @@ shared_examples_for 'openldap::server' do
   it { should contain_class('openldap::server::install') }
   it { should contain_class('openldap::server::service') }
   it { should contain_openldap('cn=schema,cn=config') }
-  it { should contain_openldap('cn={0}core,cn=schema,cn=config') }
   it { should contain_openldap('olcDatabase={0}config,cn=config').with_attributes(
     {
       'objectClass' => ['olcDatabaseConfig'],
@@ -18,6 +17,7 @@ shared_examples_for 'openldap::server' do
     }
   ) }
   it { should contain_openldap('olcDatabase={1}monitor,cn=config') }
+  it { should contain_openldap__server__schema('core') }
 end
 
 shared_examples_for 'openldap::server on Debian' do
@@ -30,7 +30,7 @@ shared_examples_for 'openldap::server on Debian' do
   it { should contain_file('/var/lib/ldap') }
   it { should contain_file('/var/lib/ldap/data') }
   it { should contain_group('openldap') }
-  it { should contain_openldap__server__schema('core').with_ldif('/etc/ldap/schema/core.ldif') }
+  it { should contain_openldap('cn={0}core,cn=schema,cn=config').with_ldif('/etc/ldap/schema/core.ldif') }
   it { should contain_package('slapd') }
   it { should contain_service('slapd') }
   it { should contain_user('openldap') }
@@ -44,7 +44,7 @@ shared_examples_for 'openldap::server on RedHat' do
   it { should contain_file('/var/lib/ldap') }
   it { should contain_file('/var/lib/ldap/data') }
   it { should contain_group('ldap') }
-  it { should contain_openldap__server__schema('core').with_ldif('/etc/openldap/schema/core.ldif') }
+  it { should contain_openldap('cn={0}core,cn=schema,cn=config').with_ldif('/etc/openldap/schema/core.ldif') }
   it { should contain_package('openldap-servers') }
   it { should contain_service('slapd') }
   it { should contain_user('ldap') }
