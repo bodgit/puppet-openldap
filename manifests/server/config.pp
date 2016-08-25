@@ -62,21 +62,22 @@ class openldap::server::config {
   openldap { 'cn=config':
     ensure     => present,
     attributes => delete_undef_values({
-      'cn'                       => 'config',
-      'objectClass'              => 'olcGlobal',
-      'olcArgsFile'              => $::openldap::server::args_file,
-      'olcAuthzPolicy'           => $::openldap::server::authz_policy,
-      'olcLocalSSF'              => $::openldap::server::local_ssf,
-      'olcLogLevel'              => $::openldap::server::log_level,
-      'olcPidFile'               => $::openldap::server::pid_file,
-      'olcSecurity'              => $::openldap::server::security,
-      'olcTLSCACertificateFile'  => $::openldap::server::ssl_ca,
-      'olcTLSCACertificatePath'  => $::openldap::server::ssl_certs_dir,
-      'olcTLSCertificateFile'    => $::openldap::server::ssl_cert,
-      'olcTLSCertificateKeyFile' => $::openldap::server::ssl_key,
-      'olcTLSCipherSuite'        => $::openldap::server::ssl_cipher,
-      'olcTLSDHParamFile'        => $::openldap::server::ssl_dhparam,
-      'olcTLSProtocolMin'        => $::openldap::server::ssl_protocol,
+      'cn'                         => 'config',
+      'objectClass'                => 'olcGlobal',
+      'olcArgsFile'                => $::openldap::server::args_file,
+      'olcAuthzPolicy'             => $::openldap::server::authz_policy,
+      'olcLocalSSF'                => $::openldap::server::local_ssf,
+      'olcLogLevel'                => $::openldap::server::log_level,
+      'olcPidFile'                 => $::openldap::server::pid_file,
+      'olcSecurity'                => $::openldap::server::security,
+      'olcTLSCACertificateFile'    => $::openldap::server::ssl_ca,
+      'olcTLSCACertificatePath'    => $::openldap::server::ssl_certs_dir,
+      'olcTLSCertificateFile'      => $::openldap::server::ssl_cert,
+      'olcTLSCertificateKeyFile'   => $::openldap::server::ssl_key,
+      'olcTLSCipherSuite'          => $::openldap::server::ssl_cipher,
+      'olcTLSDHParamFile'          => $::openldap::server::ssl_dhparam,
+      'olcTLSProtocolMin'          => $::openldap::server::ssl_protocol,
+      'olcPasswordCryptSaltFormat' => $::openldap::server::password_crypt_salt_format, # lint:ignore:80chars
     }),
   }
 
@@ -163,13 +164,14 @@ class openldap::server::config {
   openldap { 'olcDatabase={-1}frontend,cn=config':
     ensure     => present,
     attributes => delete_undef_values({
-      'objectClass'  => [
+      'objectClass'     => [
         'olcDatabaseConfig',
         'olcFrontendConfig',
       ],
-      'olcDatabase'  => '{-1}frontend',
-      'olcSizeLimit' => $::openldap::server::size_limit,
-      'olcTimeLimit' => $::openldap::server::time_limit,
+      'olcDatabase'     => '{-1}frontend',
+      'olcSizeLimit'    => $::openldap::server::size_limit,
+      'olcTimeLimit'    => $::openldap::server::time_limit,
+      'olcPasswordHash' => $::openldap::server::password_hash,
     }),
   }
 
