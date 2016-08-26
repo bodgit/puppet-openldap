@@ -371,6 +371,19 @@ The name of the package to install that provides the LDAP `slapd` daemon.
 
 Where `slapd` writes out its PID.
 
+##### `password_crypt_salt_format`
+
+The format of the salt for hashing user passwords. Corresponds to the
+`olcPasswordCryptSaltFormat` attribute. See the entry in the
+`slapd-config(5)` man page for formatting details.
+
+##### `password_hash`
+
+The password hashing scheme to use for user passwords. Can be set to
+one of {SSHA}, {SHA}, {SMD5}, {MD5}, {CRYPT}, or {CLEARTEXT}. If this
+is not set, LDAP uses {SSHA} by default. Corresponds to the `olcPasswordHash`
+attribute.
+
 ##### `ppolicy`
 
 Setting this to `true` will enable the `ppolicy` overlay on the main database
