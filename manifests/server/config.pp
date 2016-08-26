@@ -176,7 +176,7 @@ class openldap::server::config {
   if $::openldap::server::chain {
     $_chain_return_error = $::openldap::server::chain_return_error ? {
       undef   => undef,
-      default => bool2str($::openldap::server::chain_return_error, 'TRUE', 'FALSE'), # lint:ignore:80chars
+      default => bool2str($::openldap::server::chain_return_error, 'TRUE', 'FALSE'),
     }
 
     openldap { 'olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config':
@@ -194,10 +194,10 @@ class openldap::server::config {
 
     $_chain_rebind_as_user = $::openldap::server::chain_rebind_as_user ? {
       undef   => undef,
-      default => bool2str($::openldap::server::chain_rebind_as_user, 'TRUE', 'FALSE'), # lint:ignore:80chars
+      default => bool2str($::openldap::server::chain_rebind_as_user, 'TRUE', 'FALSE'),
     }
 
-    openldap { 'olcDatabase={0}ldap,olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config': # lint:ignore:80chars
+    openldap { 'olcDatabase={0}ldap,olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config':
       ensure     => present,
       attributes => delete_undef_values({
         'objectClass'       => [
@@ -217,9 +217,9 @@ class openldap::server::config {
     ensure     => present,
     attributes => {
       'objectClass' => 'olcDatabaseConfig',
-      'olcAccess'   => '{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by * none', # lint:ignore:80chars
+      'olcAccess'   => '{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by * none',
       'olcDatabase' => '{0}config',
-      'olcLimits'   => '{0}dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited', # lint:ignore:80chars
+      'olcLimits'   => '{0}dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited', # lint:ignore:140chars
     },
   }
 
@@ -227,7 +227,7 @@ class openldap::server::config {
     ensure     => present,
     attributes => {
       'objectClass' => 'olcDatabaseConfig',
-      'olcAccess'   => '{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read by * none', # lint:ignore:80chars
+      'olcAccess'   => '{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read by * none',
       'olcDatabase' => '{1}monitor',
     },
     require    => Openldap['cn=module{0},cn=config'],
@@ -240,7 +240,7 @@ class openldap::server::config {
   if $::openldap::server::syncprov {
 
     $replica_access = "to * by dn.exact=\"${replica_dn}\" read"
-    $replica_limits = "dn.exact=\"${replica_dn}\" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited" # lint:ignore:80chars
+    $replica_limits = "dn.exact=\"${replica_dn}\" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited" # lint:ignore:140chars
 
     # Prepend replica ACL to any on the main database and also create indices
     # required by the overlay
@@ -272,7 +272,7 @@ class openldap::server::config {
           'olcDatabase'       => "{2}${db_backend}",
           'olcDbCacheSize'    => $::openldap::server::accesslog_cachesize,
           'olcDbCheckpoint'   => $::openldap::server::accesslog_checkpoint,
-          'olcDbConfig'       => openldap_values($::openldap::server::accesslog_db_config), # lint:ignore:80chars
+          'olcDbConfig'       => openldap_values($::openldap::server::accesslog_db_config),
           'olcDbDirectory'    => "${data_directory}/log",
           'olcDbDNcacheSize'  => $::openldap::server::accesslog_dn_cachesize,
           'olcDbIDLcacheSize' => $::openldap::server::accesslog_index_cachesize,
@@ -290,7 +290,7 @@ class openldap::server::config {
         require    => Openldap['cn=module{0},cn=config'],
       }
 
-      openldap { "olcOverlay={0}syncprov,olcDatabase={2}${db_backend},cn=config": # lint:ignore:80chars
+      openldap { "olcOverlay={0}syncprov,olcDatabase={2}${db_backend},cn=config":
         ensure     => present,
         attributes => delete_undef_values({
           'objectClass'     => [
@@ -346,7 +346,7 @@ class openldap::server::config {
       'olcDatabase'       => "{${db_index}}${db_backend}",
       'olcDbCacheSize'    => $::openldap::server::data_cachesize,
       'olcDbCheckpoint'   => $::openldap::server::data_checkpoint,
-      'olcDbConfig'       => openldap_values($::openldap::server::data_db_config), # lint:ignore:80chars
+      'olcDbConfig'       => openldap_values($::openldap::server::data_db_config),
       'olcDbDirectory'    => "${data_directory}/data",
       'olcDbDNcacheSize'  => $::openldap::server::data_dn_cachesize,
       'olcDbIDLcacheSize' => $::openldap::server::data_index_cachesize,
@@ -363,7 +363,7 @@ class openldap::server::config {
   }
 
   if $::openldap::server::syncprov {
-    openldap { "olcOverlay=${overlay_index['syncprov']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+    openldap { "olcOverlay=${overlay_index['syncprov']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
         'objectClass'     => [
@@ -379,7 +379,7 @@ class openldap::server::config {
     }
 
     if $::openldap::server::accesslog {
-      openldap { "olcOverlay=${overlay_index['accesslog']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+      openldap { "olcOverlay=${overlay_index['accesslog']},olcDatabase={${db_index}}${db_backend},cn=config":
         ensure     => present,
         attributes => delete_undef_values({
           'objectClass'         => [
@@ -398,7 +398,7 @@ class openldap::server::config {
   }
 
   if $::openldap::server::auditlog {
-    openldap { "olcOverlay=${overlay_index['auditlog']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+    openldap { "olcOverlay=${overlay_index['auditlog']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
         'objectClass'     => [
@@ -422,7 +422,7 @@ class openldap::server::config {
       }
     }
 
-    openldap { "olcOverlay=${overlay_index['smbk5pwd']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+    openldap { "olcOverlay=${overlay_index['smbk5pwd']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
         'objectClass'           => [
@@ -438,7 +438,7 @@ class openldap::server::config {
   }
 
   if $::openldap::server::unique {
-    openldap {"olcOverlay=${overlay_index['unique']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+    openldap {"olcOverlay=${overlay_index['unique']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
         'objectClass'  => [
@@ -455,18 +455,18 @@ class openldap::server::config {
   if $::openldap::server::ppolicy {
     $_ppolicy_hash_cleartext  = $::openldap::server::ppolicy_hash_cleartext ? {
       undef   => undef,
-      default => bool2str($::openldap::server::ppolicy_hash_cleartext, 'TRUE', 'FALSE'), # lint:ignore:80chars
+      default => bool2str($::openldap::server::ppolicy_hash_cleartext, 'TRUE', 'FALSE'),
     }
     $_ppolicy_use_lockout     = $::openldap::server::ppolicy_use_lockout ? {
       undef   => undef,
-      default => bool2str($::openldap::server::ppolicy_use_lockout, 'TRUE', 'FALSE'), # lint:ignore:80chars
+      default => bool2str($::openldap::server::ppolicy_use_lockout, 'TRUE', 'FALSE'),
     }
     $_ppolicy_forward_updates = $::openldap::server::ppolicy_forward_updates ? {
       undef   => undef,
-      default => bool2str($::openldap::server::ppolicy_forward_updates, 'TRUE' ,'FALSE'), # lint:ignore:80chars
+      default => bool2str($::openldap::server::ppolicy_forward_updates, 'TRUE' ,'FALSE'),
     }
 
-    openldap { "olcOverlay=${overlay_index['ppolicy']},olcDatabase={${db_index}}${db_backend},cn=config": # lint:ignore:80chars
+    openldap { "olcOverlay=${overlay_index['ppolicy']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
         'objectClass'              => [

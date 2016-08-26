@@ -83,14 +83,9 @@ class openldap::server::install {
   # I set the mode in the above resource, when slapd creates either a file or
   # directory for a new node in the 'cn=config' database it will trigger a
   # change on the next run which IMHO is a bug
-  exec { "find ${::openldap::server::conf_dir}/slapd.d \\( -type f -exec chmod 0600 '{}' ';' \\) -o \\( -type d -exec chmod 0750 '{}' ';' \\)": # lint:ignore:80chars
-    path    => [
-      '/sbin',
-      '/usr/sbin',
-      '/bin',
-      '/usr/bin',
-    ],
-    onlyif  => "find ${::openldap::server::conf_dir}/slapd.d \\( -type f -a \\! -perm 0600 \\) -o \\( -type d -a \\! -perm 0750 \\) | grep -q .", # lint:ignore:80chars
+  exec { "find ${::openldap::server::conf_dir}/slapd.d \\( -type f -exec chmod 0600 '{}' ';' \\) -o \\( -type d -exec chmod 0750 '{}' ';' \\)": # lint:ignore:140chars
+    path    => $::path,
+    onlyif  => "find ${::openldap::server::conf_dir}/slapd.d \\( -type f -a \\! -perm 0600 \\) -o \\( -type d -a \\! -perm 0750 \\) | grep -q .", # lint:ignore:140chars
     require => File["${::openldap::server::conf_dir}/slapd.d"],
     before  => Package[$package_name],
   }

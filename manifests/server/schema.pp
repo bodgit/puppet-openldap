@@ -7,7 +7,7 @@ define openldap::server::schema (
 ) {
 
   if ! defined(Class['::openldap::server']) {
-    fail('You must include the openldap::server class before using any openldap defined resources') # lint:ignore:80chars
+    fail('You must include the openldap::server class before using any openldap defined resources')
   }
 
   $minimum_position = $caller_module_name ? {

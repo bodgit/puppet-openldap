@@ -4,7 +4,7 @@ class openldap::server (
   $root_password,
   $suffix,
   $access                    = [
-    'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage', # lint:ignore:80chars
+    'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage',
   ],
   $accesslog                 = false,
   $accesslog_cachesize       = undef,
@@ -70,7 +70,7 @@ class openldap::server (
 ) inherits ::openldap::params {
 
   if ! defined(Class['::openldap::client']) {
-    fail('You must include the openldap::client class before using the openldap::server class') # lint:ignore:80chars
+    fail('You must include the openldap::client class before using the openldap::server class')
   }
 
   validate_string($root_dn)
@@ -164,7 +164,7 @@ class openldap::server (
     validate_re($security, '^\w+=\d+(?:\s+\w+=\d+)*$')
   }
   if $size_limit {
-    validate_re("${size_limit}", '^(?:(size)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars lint:ignore:only_variable_string
+    validate_re("${size_limit}", '^(?:(size)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:140chars lint:ignore:only_variable_string
   }
   validate_bool($smbk5pwd)
   if $smbk5pwd {
@@ -205,7 +205,7 @@ class openldap::server (
     validate_array($syncrepl)
   }
   if $time_limit {
-    validate_re("${time_limit}", '^(?:(time)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:80chars lint:ignore:only_variable_string
+    validate_re("${time_limit}", '^(?:(time)(?:\.\w+)?=)?(?:\d+|unlimited)(?:\s+\1(?:\.\w+)?=(?:\d+|unlimited))*$') # lint:ignore:140chars lint:ignore:only_variable_string
   }
   validate_bool($unique)
   if $unique {

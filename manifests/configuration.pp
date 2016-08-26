@@ -38,7 +38,7 @@ define openldap::configuration (
 ) {
 
   if ! defined(Class['::openldap']) {
-    fail('You must include the openldap base class before using any openldap defined resources') # lint:ignore:80chars
+    fail('You must include the openldap base class before using any openldap defined resources')
   }
 
   validate_re($ensure, '^(?:file|present|absent)$')

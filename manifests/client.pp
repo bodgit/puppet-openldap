@@ -4,7 +4,7 @@ class openldap::client (
 ) inherits ::openldap::params {
 
   if ! defined(Class['::openldap']) {
-    fail('You must include the openldap base class before using the openldap::client class ') # lint:ignore:80chars
+    fail('You must include the openldap base class before using the openldap::client class ')
   }
 
   include ::openldap::client::install
