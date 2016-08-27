@@ -367,10 +367,6 @@ The extension module files have, normally `.la`.
 
 The name of the package to install that provides the LDAP `slapd` daemon.
 
-##### `pid_file`
-
-Where `slapd` writes out its PID.
-
 ##### `password_crypt_salt_format`
 
 The format of the salt for hashing user passwords. Corresponds to the
@@ -379,10 +375,32 @@ The format of the salt for hashing user passwords. Corresponds to the
 
 ##### `password_hash`
 
-The password hashing scheme to use for user passwords. Can be set to
-one of {SSHA}, {SHA}, {SMD5}, {MD5}, {CRYPT}, or {CLEARTEXT}. If this
-is not set, LDAP uses {SSHA} by default. Corresponds to the `olcPasswordHash`
-attribute.
+The password hashing scheme to use for user passwords. Can be set to a space
+separated string containing any of the following:
+
+* `{SSHA}`, `{SHA}`
+* `{SMD5}`, `{MD5}`
+* `{CRYPT}`
+* `{CLEARTEXT}`
+
+The following schemes are also accepted however this requires additional
+modules to be loaded which are often not available by default:
+
+* `{SSHA256}`, `{SSHA384}`, {SSHA512}`, `{SHA256}`, `{SHA384}`, `{SHA512}`
+* `{TOTP1}`, `{TOTP256}`, `{TOTP512}`
+* `{PBKDF2}`, `{PBKDF2-SHA1}`, `{PBKDF2-SHA256}`, `{PBKDF2-SHA512}`
+* `{BSDMD5}`
+* `{NS-MTA-MD5}`
+* `{APR1}`
+* `{RADIUS}`
+* `{KERBEROS}`
+
+If this is not set, LDAP uses `{SSHA}` by default. Corresponds to the
+`olcPasswordHash` attribute.
+
+##### `pid_file`
+
+Where `slapd` writes out its PID.
 
 ##### `ppolicy`
 
