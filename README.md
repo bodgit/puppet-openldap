@@ -386,7 +386,7 @@ separated string containing any of the following:
 The following schemes are also accepted however this requires additional
 modules to be loaded which are often not available by default:
 
-* `{SSHA256}`, `{SSHA384}`, {SSHA512}`, `{SHA256}`, `{SHA384}`, `{SHA512}`
+* `{SSHA256}`, `{SSHA384}`, `{SSHA512}`, `{SHA256}`, `{SHA384}`, `{SHA512}`
 * `{TOTP1}`, `{TOTP256}`, `{TOTP512}`
 * `{PBKDF2}`, `{PBKDF2-SHA1}`, `{PBKDF2-SHA256}`, `{PBKDF2-SHA512}`
 * `{BSDMD5}`
