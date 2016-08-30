@@ -17,6 +17,7 @@ class openldap::server (
   $auditlog_file              = $::openldap::params::auditlog_file,
   $authz_policy               = undef,
   $backend_modules            = $::openldap::params::backend_modules,
+  $backend_packages           = $::openldap::params::backend_packages,
   $chain                      = false,
   $chain_id_assert_bind       = undef,
   $chain_rebind_as_user       = undef,
@@ -37,9 +38,12 @@ class openldap::server (
   $local_ssf                  = $::openldap::params::local_ssf,
   $log_level                  = $::openldap::params::log_level,
   $module_extension           = $::openldap::params::module_extension,
+  $overlay_packages           = $::openldap::params::overlay_packages,
   $package_name               = $::openldap::params::server_package_name,
   $password_crypt_salt_format = undef,
   $password_hash              = undef,
+  $password_modules           = $::openldap::params::password_modules,
+  $password_packages          = $::openldap::params::password_packages,
   $pid_file                   = $::openldap::params::pid_file,
   $ppolicy                    = false,
   $ppolicy_default            = undef,
@@ -105,6 +109,7 @@ class openldap::server (
     validate_re($authz_policy, '^(?:none|from|to|any|all)$')
   }
   validate_array($backend_modules)
+  validate_hash($backend_packages)
   if $chain {
     validate_bool($chain)
     validate_string($chain_id_assert_bind)
@@ -144,11 +149,14 @@ class openldap::server (
   if $log_level {
     validate_re($log_level, '^(?:\d+|0x\h+|\w+)(?:\s+(?:\d+|0x\h+|\w+))*$')
   }
+  validate_hash($overlay_packages)
   validate_string($package_name)
   validate_string($password_crypt_salt_format)
   if $password_hash {
     validate_re($password_hash, '^{(?:S?SHA(?:256|384|512)?|(?:S|BSD)?MD5|CRYPT|CLEARTEXT|TOTP(?:1|256|512)|PBKDF2(?:-SHA(?:1|256|512))?|RADIUS|NS-MTA-MD5|KERBEROS|APR1)}(?:\s+{(?:S?SHA(?:256|384|512)?|(?:S|BSD)?MD5|CRYPT|CLEARTEXT|TOTP(?:1|256|512)|PBKDF2(?:-SHA(?:1|256|512))?|RADIUS|NS-MTA-MD5|KERBEROS|APR1)})*$') # lint:ignore:140chars
   }
+  validate_hash($password_modules)
+  validate_hash($password_packages)
   validate_absolute_path($pid_file)
   if $ppolicy {
     if $ppolicy_default {

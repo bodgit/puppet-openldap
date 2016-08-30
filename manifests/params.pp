@@ -7,6 +7,27 @@ class openldap::params {
   $local_ssf           = 256
   $log_level           = undef
   $module_extension    = '.la'
+  $password_modules    = {
+    '{SHA256}'        => 'pw-sha2',
+    '{SHA384}'        => 'pw-sha2',
+    '{SHA512}'        => 'pw-sha2',
+    '{SSHA256}'       => 'pw-sha2',
+    '{SSHA384}'       => 'pw-sha2',
+    '{SSHA512}'       => 'pw-sha2',
+    '{TOTP1}'         => 'pw-totp',
+    '{TOTP256}'       => 'pw-totp',
+    '{TOTP512}'       => 'pw-totp',
+    '{PBKDF2}'        => 'pw-pbkdf2',
+    '{PBKDF2-SHA1}'   => 'pw-pbkdf2',
+    '{PBKDF2-SHA256}' => 'pw-pbkdf2',
+    '{PBKDF2-SHA512}' => 'pw-pbkdf2',
+    '{BSDMD5}'        => 'pw-apr1',
+    '{APR1}'          => 'pw-apr1',
+    '{NS-MTA-MD5}'    => 'pw-netscape',
+    '{RADIUS}'        => 'pw-radius',
+    '{KERBEROS}'      => 'pw-kerberos',
+  }
+  $password_packages   = {}
   $ssl_ca              = undef
   $ssl_cert            = undef
   $ssl_certs_dir       = undef
@@ -31,7 +52,11 @@ class openldap::params {
         'relay',
         'shell',
         'sock',
+        'sql',
       ]
+      $backend_packages    = {
+        'sql' => 'openldap-servers-sql',
+      }
       $base_package_name   = 'openldap'
       $client_package_name = 'openldap-clients'
       $conf_dir            = '/etc/openldap'
@@ -64,6 +89,7 @@ class openldap::params {
         'sock',
         'sql',
       ]
+      $backend_packages    = {}
       $base_package_name   = 'libldap-2.4-2'
       $client_package_name = 'ldap-utils'
       $conf_dir            = '/etc/ldap'

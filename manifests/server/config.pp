@@ -1,14 +1,17 @@
 #
 class openldap::server::config {
 
-  $backend_modules  = $::openldap::server::backend_modules
-  $data_directory   = $::openldap::server::data_directory
-  $db_backend       = $::openldap::server::db_backend
-  $group            = $::openldap::server::group
-  $module_extension = $::openldap::server::module_extension
-  $overlay_packages = $::openldap::server::overlay_packages
-  $replica_dn       = $::openldap::server::replica_dn
-  $user             = $::openldap::server::user
+  $backend_modules    = $::openldap::server::backend_modules
+  $data_directory     = $::openldap::server::data_directory
+  $db_backend         = $::openldap::server::db_backend
+  $group              = $::openldap::server::group
+  $module_extension   = $::openldap::server::module_extension
+  $overlay_packages   = $::openldap::server::overlay_packages
+  $password_hash      = $::openldap::server::password_hash
+  $_password_modules  = $::openldap::server::password_modules
+  $_password_packages = $::openldap::server::password_packages
+  $replica_dn         = $::openldap::server::replica_dn
+  $user               = $::openldap::server::user
 
   # Wrap each 'address:port' with the correct URL scheme and trailing '/'
   $ldap_interfaces = suffix(prefix($::openldap::server::ldap_interfaces, 'ldap://'), '/')
@@ -77,7 +80,7 @@ class openldap::server::config {
       'olcTLSCipherSuite'          => $::openldap::server::ssl_cipher,
       'olcTLSDHParamFile'          => $::openldap::server::ssl_dhparam,
       'olcTLSProtocolMin'          => $::openldap::server::ssl_protocol,
-      'olcPasswordCryptSaltFormat' => $::openldap::server::password_crypt_salt_format, # lint:ignore:80chars
+      'olcPasswordCryptSaltFormat' => $::openldap::server::password_crypt_salt_format,
     }),
   }
 
@@ -118,6 +121,16 @@ class openldap::server::config {
   # }
   $overlay_index = hash(flatten(zip($overlays, openldap_values($overlays))))
 
+  $_password_hash = $password_hash ? {
+    undef   => '',
+    default => $password_hash,
+  }
+
+  # Generate a unique list of modules needed to satisfy the chosen password
+  # hashes and subsequently a unique list of packages needed to be installed
+  $password_modules  = parsejson(inline_template('<%= @_password_hash.split(/\s+/).map { |x| @_password_modules[x] }.compact.uniq.to_json  %>')) # lint:ignore:140chars
+  $password_packages = parsejson(inline_template('<%= @password_modules.map { |x| @_password_packages[x] }.compact.uniq.to_json %>'))
+
   $modules = flatten([delete_undef_values([
     member($backend_modules, 'monitor') ? {
       true    => 'back_monitor',
@@ -135,7 +148,7 @@ class openldap::server::config {
       },
       default => undef,
     },
-  ]), $overlays])
+  ]), $overlays, $password_modules])
 
   # Convert ['module1', 'module2'] into ['{0}module1.la', '{1}module2.la']
   $module_load = suffix(openldap_values($modules), $module_extension)
@@ -147,6 +160,13 @@ class openldap::server::config {
       'objectClass'   => 'olcModuleList',
       'olcModuleLoad' => $module_load,
     },
+  }
+
+  if size($password_packages) > 0 {
+    package { $password_packages:
+      ensure => present,
+      before => Openldap['cn=module{0},cn=config'],
+    }
   }
 
   openldap { 'cn=schema,cn=config':
@@ -171,7 +191,7 @@ class openldap::server::config {
       'olcDatabase'     => '{-1}frontend',
       'olcSizeLimit'    => $::openldap::server::size_limit,
       'olcTimeLimit'    => $::openldap::server::time_limit,
-      'olcPasswordHash' => $::openldap::server::password_hash,
+      'olcPasswordHash' => $password_hash,
     }),
   }
 

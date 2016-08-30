@@ -252,7 +252,14 @@ Maps to the `olcAuthzPolicy` attribute, accepts one of `none`, `from`, `to`,
 ##### `backend_modules`
 
 An array of database backends that are built as modules and therefore require
-loading before use.
+loading before use. The backend names are listed without the `back_` prefix
+and any extension that the module filename might have.
+
+##### `backend_packages`
+
+A hash keyed by database backend with the package name that provides it as the
+value. As with `backend_modules` the backend is used without any `back_`
+prefix and any extension that the module filename might have.
 
 ##### `chain`
 
@@ -363,6 +370,11 @@ Set the logging level. Maps to the `olcLogLevel` attribute.
 
 The extension module files have, normally `.la`.
 
+##### `overlay_packages`
+
+A hash keyed by overlay name with the package name that provides it as the
+value.
+
 ##### `package_name`
 
 The name of the package to install that provides the LDAP `slapd` daemon.
@@ -397,6 +409,17 @@ modules to be loaded which are often not available by default:
 
 If this is not set, LDAP uses `{SSHA}` by default. Corresponds to the
 `olcPasswordHash` attribute.
+
+##### `password_modules`
+
+A hash keyed by password hashing scheme with the module name that provides it
+as the value. The hashing scheme is listed complete with enclosing `{}`'s and
+the value is listed without any extension that the module filename might have.
+
+##### `password_packages`
+
+A hash keyed by any values in `password_modules` with the package name that
+provides it as the value.
 
 ##### `pid_file`
 
@@ -1014,6 +1037,42 @@ package { 'samba':
   ldif     => '/usr/share/doc/samba-4.1.12/LDAP/samba.ldif',
   position => 4,
   require  => Package['samba'],
+}
+```
+
+Extend the standalone example with support for using SSHA-512 for password
+hashes:
+
+```puppet
+include ::openldap
+include ::openldap::client
+
+class { '::openldap::server':
+  root_dn           => 'cn=Manager,dc=example,dc=com',
+  root_password     => '{SSHA512}NGGQjxVVm3+t+3bEJg0Mn0AFXWW+68xGS6EK5Lk7f3iXV/nQallv0Oqa+E0h9a248QaAcspbvGe9OWDLJEp1N/emNoAuuajX',
+  suffix            => 'dc=example,dc=com',
+  access            => [
+    'to attrs=userPassword by self =xw by anonymous auth',
+    'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by self write by users read',
+  ],
+  indices           => [
+    'objectClass eq,pres',
+    'ou,cn,mail,surname,givenname eq,pres,sub',
+  ],
+  ldap_interfaces   => [$ipaddress],
+  password_hash     => '{SSHA512}',
+  password_packages => {
+    'pw-sha2' => 'openldap-sha2-package',
+  },
+}
+::openldap::server::schema { 'cosine':
+  position => 1,
+}
+::openldap::server::schema { 'inetorgperson':
+  position => 2,
+}
+::openldap::server::schema { 'nis':
+  position => 3,
 }
 ```
 

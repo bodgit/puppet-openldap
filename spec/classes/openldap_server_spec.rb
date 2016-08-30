@@ -132,6 +132,83 @@ describe 'openldap::server' do
           end
         end
 
+        context 'with non-default password hashing', :compile do
+          let(:params) do
+            super().merge(
+              {
+                :password_hash     => '{SSHA} {SSHA512} {SSHA384} {TOTP1}',
+                :password_packages => {
+                  'pw-sha2' => 'openldap-sha2-package',
+                  'pw-totp' => 'openldap-totp-package',
+                },
+              }
+            )
+          end
+
+          it_behaves_like "openldap::server on #{facts[:osfamily]}"
+
+          it { should contain_openldap('cn=config') }
+          it { should contain_openldap('olcDatabase={-1}frontend,cn=config').with_attributes(
+            {
+              'objectClass'     => [
+                'olcDatabaseConfig',
+                'olcFrontendConfig',
+              ],
+              'olcDatabase'     => ['{-1}frontend'],
+              'olcPasswordHash' => ['{SSHA} {SSHA512} {SSHA384} {TOTP1}'],
+            }
+          ) }
+          it { should contain_openldap('olcDatabase={2}hdb,cn=config').with_attributes(
+            {
+              'objectClass'    => [
+                'olcDatabaseConfig',
+                'olcHdbConfig',
+              ],
+              'olcAccess'      => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage'],
+              'olcDatabase'    => ['{2}hdb'],
+              'olcDbDirectory' => ['/var/lib/ldap/data'],
+              'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
+              'olcRootPW'      => ['secret'],
+              'olcSuffix'      => ['dc=example,dc=com'],
+            }
+          ) }
+          it { should contain_package('openldap-sha2-package').with_before('Openldap[cn=module{0},cn=config]') }
+          it { should contain_package('openldap-totp-package').with_before('Openldap[cn=module{0},cn=config]') }
+
+          case facts[:osfamily]
+          when 'Debian'
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}back_monitor.la',
+                  '{1}back_hdb.la',
+                  '{2}pw-sha2.la',
+                  '{3}pw-totp.la',
+                ],
+              }
+            ) }
+          when 'RedHat'
+            case facts[:operatingsystemmajrelease]
+            when '6'
+              it { should contain_file('/etc/sysconfig/ldap') }
+            else
+              it { should contain_file('/etc/sysconfig/slapd') }
+            end
+            it { should contain_openldap('cn=module{0},cn=config').with_attributes(
+              {
+                'cn'            => ['module{0}'],
+                'objectClass'   => ['olcModuleList'],
+                'olcModuleLoad' => [
+                  '{0}pw-sha2.la',
+                  '{1}pw-totp.la',
+                ],
+              }
+            ) }
+          end
+        end
+
         context 'with auditlog enabled', :compile do
           let(:params) do
             super().merge(
