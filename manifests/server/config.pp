@@ -109,6 +109,10 @@ class openldap::server::config {
       true    => 'ppolicy',
       default => undef,
     },
+    $::openldap::server::memberof ? {
+      true    => 'memberof',
+      default => undef,
+    },
   ])
 
   # Creates a hash based on the enabled overlays pointing to their intended
@@ -500,6 +504,19 @@ class openldap::server::config {
         'olcPPolicyHashCleartext'  => $_ppolicy_hash_cleartext,
         'olcPPolicyUseLockout'     => $_ppolicy_use_lockout,
         'olcPPolicyForwardUpdates' => $_ppolicy_forward_updates,
+      }),
+      require    => Openldap['cn=module{0},cn=config'],
+    }
+  }
+
+  if $::openldap::server::memberof {
+    openldap { "olcOverlay=${overlay_index['memberof']},olcDatabase={${db_index}}${db_backend},cn=config":
+      ensure     => present,
+      attributes => delete_undef_values({
+        'objectClass'           => [
+          'olcOverlayConfig',
+        ],
+        'olcOverlay'            => $overlay_index['memberof'],
       }),
       require    => Openldap['cn=module{0},cn=config'],
     }

@@ -38,6 +38,7 @@ class openldap::server (
   $local_ssf                  = $::openldap::params::local_ssf,
   $log_level                  = $::openldap::params::log_level,
   $module_extension           = $::openldap::params::module_extension,
+  $memberof                   = false,
   $overlay_packages           = $::openldap::params::overlay_packages,
   $package_name               = $::openldap::params::server_package_name,
   $password_crypt_salt_format = undef,
@@ -233,6 +234,7 @@ class openldap::server (
     validate_ldap_uri($update_ref)
   }
   validate_string($user)
+  validate_bool($memberof)
 
   if $chain and ! $update_ref {
     fail('Chaining requires an update referral URL')
