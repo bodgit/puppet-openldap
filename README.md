@@ -366,6 +366,11 @@ connection to manipulate the configuration.
 
 Set the logging level. Maps to the `olcLogLevel` attribute.
 
+##### `memberof`
+
+Setting this to `true` enables the memberOf overlay. See the entry in `slapo-memberof(5)`
+man page for more details.
+
 ##### `module_extension`
 
 The extension module files have, normally `.la`.
