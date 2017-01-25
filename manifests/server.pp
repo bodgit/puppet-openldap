@@ -150,6 +150,7 @@ class openldap::server (
   if $log_level {
     validate_re($log_level, '^(?:\d+|0x\h+|\w+)(?:\s+(?:\d+|0x\h+|\w+))*$')
   }
+  validate_bool($memberof)
   validate_hash($overlay_packages)
   validate_string($package_name)
   validate_string($password_crypt_salt_format)
@@ -234,7 +235,6 @@ class openldap::server (
     validate_ldap_uri($update_ref)
   }
   validate_string($user)
-  validate_bool($memberof)
 
   if $chain and ! $update_ref {
     fail('Chaining requires an update referral URL')
