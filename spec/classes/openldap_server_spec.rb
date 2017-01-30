@@ -516,7 +516,7 @@ describe 'openldap::server' do
                 'olcModuleLoad' => [
                   '{0}back_monitor.la',
                   '{1}back_hdb.la',
-                  '{2}unique.la',
+                  '{2}memberof.la',
                 ],
               }
             ) }
@@ -526,7 +526,7 @@ describe 'openldap::server' do
                 'cn'            => ['module{0}'],
                 'objectClass'   => ['olcModuleList'],
                 'olcModuleLoad' => [
-                  '{0}unique.la',
+                  '{0}memberof.la',
                 ],
               }
             ) }
