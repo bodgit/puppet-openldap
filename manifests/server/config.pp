@@ -513,10 +513,10 @@ class openldap::server::config {
     openldap { "olcOverlay=${overlay_index['memberof']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
-        'objectClass'           => [
+        'objectClass' => [
           'olcOverlayConfig',
         ],
-        'olcOverlay'            => $overlay_index['memberof'],
+        'olcOverlay'  => $overlay_index['memberof'],
       }),
       require    => Openldap['cn=module{0},cn=config'],
     }
