@@ -15,7 +15,7 @@ DEREF				<%= @deref %>
 <% if @network_timeout -%>
 NETWORK_TIMEOUT			<%= @network_timeout %>
 <% end -%>
-<% if @referrals -%>
+<% unless @referrals.nil? -%>
 REFERRALS			<%= @referrals ? 'on' : 'off' %>
 <% end -%>
 <% if @sizelimit -%>
@@ -42,16 +42,16 @@ SASL_AUTHZID			<%= @sasl_authzid %>
 <% if @sasl_secprops -%>
 SASL_SECPROPS			<%= @sasl_secprops.join(',') %>
 <% end -%>
-<% if @sasl_nocanon -%>
+<% unless @sasl_nocanon.nil? -%>
 SASL_NOCANON			<%= @sasl_nocanon ? 'on' : 'off' %>
 <% end -%>
-<% if @gssapi_sign -%>
+<% unless @gssapi_sign.nil? -%>
 GSSAPI_SIGN			<%= @gssapi_sign ? 'on' : 'off' %>
 <% end -%>
-<% if @gssapi_encrypt -%>
+<% unless @gssapi_encrypt.nil? -%>
 GSSAPI_ENCRYPT			<%= @gssapi_encrypt ? 'on' : 'off' %>
 <% end -%>
-<% if @gssapi_allow_remote_principal -%>
+<% unless @gssapi_allow_remote_principal.nil? -%>
 GSSAPI_ALLOW_REMOTE_PRINCIPAL	<%= @gssapi_allow_remote_principal ? 'on' : 'off' %>
 <% end -%>
 <% if @tls_cacert -%>
