@@ -1,4 +1,4 @@
-#
+# @!visibility private
 class openldap::params {
 
   $auditlog_file       = undef

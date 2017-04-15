@@ -1,17 +1,22 @@
+# Installs LDAP client utilities.
 #
+# This class is optional in the scenario of an Operating System that packages
+# the LDAP libraries and clients together in one package, use the `openldap`
+# class to install that single package.
+#
+# @example Declaring the class
+#   include ::openldap
+#
+# @param package_name The name of the package.
+#
+# @see puppet_classes::openldap ::openldap
 class openldap::client (
-  $package_name   = $::openldap::params::client_package_name,
+  String $package_name = $::openldap::params::client_package_name,
 ) inherits ::openldap::params {
 
   if ! defined(Class['::openldap']) {
-    fail('You must include the openldap base class before using the openldap::client class ')
+    fail('You must include the openldap base class before using the openldap::client class')
   }
 
-  include ::openldap::client::install
-
-  anchor { 'openldap::client::begin': }
-  anchor { 'openldap::client::end': }
-
-  Anchor['openldap::client::begin'] -> Class['::openldap::client::install']
-    -> Anchor['openldap::client::end']
+  contain ::openldap::client::install
 }

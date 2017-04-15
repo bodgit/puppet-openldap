@@ -18,8 +18,6 @@ describe 'openldap' do
         facts
       end
 
-      it { should contain_anchor('openldap::begin') }
-      it { should contain_anchor('openldap::end') }
       it { should contain_class('openldap') }
       it { should contain_class('openldap::config') }
       it { should contain_class('openldap::install') }

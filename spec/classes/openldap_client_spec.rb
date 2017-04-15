@@ -24,8 +24,6 @@ describe 'openldap::client' do
           facts
         end
 
-        it { should contain_anchor('openldap::client::begin') }
-        it { should contain_anchor('openldap::client::end') }
         it { should contain_class('openldap::client') }
         it { should contain_class('openldap::client::install') }
 

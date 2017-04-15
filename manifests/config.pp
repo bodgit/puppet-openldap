@@ -1,4 +1,4 @@
-#
+# @!visibility private
 class openldap::config {
 
   file { $::openldap::conf_dir:
