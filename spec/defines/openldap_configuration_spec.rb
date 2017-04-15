@@ -12,7 +12,7 @@ describe 'openldap::configuration' do
       :owner            => 0,
       :group            => 0,
       :mode             => '0644',
-      :tls_protocol_min => '3.2',
+      :tls_protocol_min => 3.2,
     }
   end
 
