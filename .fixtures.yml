@@ -1,5 +1,3 @@
 fixtures:
   symlinks:
     openldap: "#{source_dir}"
-  forge_modules:
-    firewall: "puppetlabs/firewall"

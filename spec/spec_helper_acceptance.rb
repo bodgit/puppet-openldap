@@ -1,8 +1,12 @@
 require 'beaker-rspec/spec_helper'
 require 'beaker-rspec/helpers/serverspec'
+require 'beaker/puppet_install_helper'
 
 hosts.each do |host|
-  install_puppet
+  # Just assume the OpenBSD box has Puppet installed already
+  if host['platform'] !~ /^openbsd-/i
+    run_puppet_install_helper_on(host)
+  end
 end
 
 RSpec.configure do |c|
@@ -12,7 +16,7 @@ RSpec.configure do |c|
 
   c.before :suite do
     hosts.each do |host|
-      copy_module_to(host, :source => proj_root, :module_name => 'openldap')
+      puppet_module_install(:source => proj_root, :module_name => 'openldap')
       on host, puppet('module', 'install', 'puppetlabs-stdlib'),   { :acceptable_exit_codes => [0,1] }
       on host, puppet('module', 'install', 'puppetlabs-firewall'), { :acceptable_exit_codes => [0,1] }
       on host, puppet('module', 'install', 'saz-rsyslog'),         { :acceptable_exit_codes => [0,1] }

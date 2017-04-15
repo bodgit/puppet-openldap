@@ -1,9 +1,11 @@
 require 'puppetlabs_spec_helper/rake_tasks'
 require 'puppet-lint/tasks/puppet-lint'
 require 'rake/clean'
+require 'metadata-json-lint/rake_task'
+require 'puppet-strings/tasks'
 
 CLEAN.include('spec/fixtures/manifests', 'spec/fixtures/modules')
-CLOBBER.include('.tmp', '.librarian', '.vagrant', 'Puppetfile.lock', 'log', 'junit')
+CLOBBER.include('.tmp', '.librarian', '.vagrant', 'Puppetfile.lock', 'log', 'junit', 'coverage')
 
 task :spec => []; Rake::Task[:spec].clear
 task :spec do
@@ -16,18 +18,17 @@ task :librarian_spec_prep do
 end
 task :spec_prep => :librarian_spec_prep
 
-Rake::Task[:lint].clear
-PuppetLint::RakeTask.new :lint do |config|
-  config.ignore_paths = ["spec/**/*.pp", "pkg/**/*.pp", "vendor/**/*.pp"]
-  config.log_format = '%{path}:%{line}:%{check}:%{KIND}:%{message}'
-  config.disable_checks = ['class_inherits_from_params_class']
-  config.fail_on_warnings = true
-end
-
 task :test => [
+  'metadata_lint',
   'syntax',
   'spec',
   'lint',
 ]
+
+PuppetLint.configuration.log_format = '%{path}:%{line}:%{check}:%{KIND}:%{message}'
+PuppetLint.configuration.ignore_paths = ['pkg/**/*.pp', 'spec/**/*.pp', 'vendor/**/*.pp']
+PuppetLint.configuration.fail_on_warnings = true
+PuppetLint.configuration.relative = true
+PuppetLint.configuration.send('disable_class_inherits_from_params_class')
 
 PuppetSyntax.exclude_paths = ['pkg/**/*', 'spec/**/*', 'vendor/**/*']

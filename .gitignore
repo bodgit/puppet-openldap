@@ -1,11 +1,11 @@
 .librarian
 .tmp
 .vagrant
+.yardoc
 Gemfile.lock
 Puppetfile.lock
-spec/fixtures/*
-!spec/fixtures/files
-!spec/fixtures/unit
+spec/fixtures/manifests
+spec/fixtures/modules
 pkg
 log
 coverage
