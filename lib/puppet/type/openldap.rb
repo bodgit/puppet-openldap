@@ -2,7 +2,16 @@ require 'set'
 require 'uri'
 
 Puppet::Type.newtype(:openldap) do
-  @doc = 'Manage openldap configuration objects'
+  desc <<-DESC
+Manage OpenLDAP configuration objects.
+
+@example
+
+  openldap { '':
+  }
+DESC
+
+  @doc = 'Manage openldap configuration objects.'
 
   ensurable do
     defaultvalues
@@ -85,35 +94,6 @@ Puppet::Type.newtype(:openldap) do
     defaultto(:true)
   end
 
-  newparam(:ldif) do
-    desc 'LDIF file containing object to load'
-
-    validate do |value|
-      unless Puppet::Util.absolute_path?(value)
-        begin
-          uri = URI.parse(URI.escape(value))
-        rescue => detail
-          raise Puppet::Error, "Could not understand LDIF #{value}: #{detail}"
-        end
-
-        raise Puppet::Error, "Cannot use relative URLs '#{value}'" unless uri.absolute?
-        raise Puppet::Error, "Cannot use opaque URLs '#{value}'" unless uri.hierarchical?
-        raise Puppet::Error, "Cannot use URLs of type '#{uri.scheme}' as source for fileserving" unless %w{file puppet}.include?(uri.scheme)
-      end
-    end
-
-    SEPARATOR_REGEX = [Regexp.escape(File::SEPARATOR.to_s), Regexp.escape(File::ALT_SEPARATOR.to_s)].join
-
-    munge do |value|
-      ldif = value.sub(/[#{SEPARATOR_REGEX}]+$/, '')
-      if Puppet::Util.absolute_path?(ldif)
-        URI.unescape(Puppet::Util.path_to_uri(ldif).to_s)
-      else
-        ldif
-      end
-    end
-  end
-
   autorequire(:openldap) do
     autos = []
 
@@ -179,13 +159,6 @@ Puppet::Type.newtype(:openldap) do
     if self[:attributes]
       # Ruby 1.8.7 compatible
       autos += Hash[self[:attributes].select { |k,v| FILE_ATTRIBUTES.include?(k.downcase) }].values.flatten
-    end
-
-    # Autorequire the LDIF file if passed and it's a local file
-    if self[:ldif]
-      if ldif = self[:ldif] and uri = URI.parse(URI.escape(ldif)) and uri.scheme == 'file'
-        autos << uri_to_path(uri)
-      end
     end
 
     autos
