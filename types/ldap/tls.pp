@@ -1,0 +1,2 @@
+# @since 2.0.0
+type OpenLDAP::LDAP::TLS = Struct[{NotUndef['mode'] => Enum['ldaps', 'propagate', 'start', 'try-propagate', 'try-start'], Optional['tls_cert'] => Stdlib::Absolutepath, Optional['tls_key'] => Stdlib::Absolutepath, Optional['tls_cacert'] => Stdlib::Absolutepath, Optional['tls_cacertdir'] => Stdlib::Absolutepath, Optional['tls_reqcert'] => Enum['never', 'allow', 'try', 'demand'], Optional['tls_ciphersuite'] => String[1], Optional['tls_crlcheck'] => Enum['none', 'peer', 'all']}]

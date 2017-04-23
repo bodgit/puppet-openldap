@@ -1,0 +1,2 @@
+# @since 2.0.0
+type OpenLDAP::LDAP::IDAssertBind = Struct[{NotUndef['bindmethod'] => Enum['none', 'simple', 'sasl'], Optional['binddn'] => Bodgitlib::LDAP::DN, Optional['credentials'] => String[1], Optional['mode'] => Enum['legacy', 'anonymous', 'none', 'self'], Optional['flags'] => Array[Enum['override', 'non-prescriptive', 'prescriptive', 'proxy-authz-critical', 'proxy-authz-non-critical'], 1]}]
