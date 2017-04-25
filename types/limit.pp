@@ -1,0 +1,2 @@
+# @since 2.0.0
+type OpenLDAP::Limit = Struct[{NotUndef['selector'] => Variant[Enum['anonymous', 'users'], Pattern[/(?x) ^ (?: dn (?: \. (?: self | this ) )? (?: \. (?: exact | base | onelevel | subtree | children | regex | anonymous ) )? = )? .+ $/], Pattern[/(?x) ^ group (?: \/ [^\/]+ (?: \/ [^=]+ )? )? = .+ $/]], Optional['size'] => OpenLDAP::Limit::Size, Optional['time'] => OpenLDAP::Limit::Time}]

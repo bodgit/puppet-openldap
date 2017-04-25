@@ -1,0 +1,2 @@
+# @since 2.0.0
+type OpenLDAP::Limit::Size = Variant[OpenLDAP::Limit::Generic, Struct[{Optional['soft'] => OpenLDAP::Limit::Generic, Optional['hard'] => Variant[OpenLDAP::Limit::Generic, Enum['soft']], Optional['unchecked'] => Variant[OpenLDAP::Limit::Generic, Enum['disable']], Optional['pr'] => Variant[OpenLDAP::Limit::Generic, Enum['noEstimate']], Optional['prtotal'] => Variant[OpenLDAP::Limit::Generic, Enum['disabled']]}]]
