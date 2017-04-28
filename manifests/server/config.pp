@@ -1,21 +1,18 @@
-#
+# @!visibility private
 class openldap::server::config {
 
-  $backend_modules    = $::openldap::server::backend_modules
-  $data_directory     = $::openldap::server::data_directory
-  $db_backend         = $::openldap::server::db_backend
-  $group              = $::openldap::server::group
-  $module_extension   = $::openldap::server::module_extension
-  $overlay_packages   = $::openldap::server::overlay_packages
-  $password_hash      = $::openldap::server::password_hash
-  $_password_modules  = $::openldap::server::password_modules
-  $_password_packages = $::openldap::server::password_packages
-  $replica_dn         = $::openldap::server::replica_dn
-  $user               = $::openldap::server::user
-
-  # Wrap each 'address:port' with the correct URL scheme and trailing '/'
-  $ldap_interfaces = suffix(prefix($::openldap::server::ldap_interfaces, 'ldap://'), '/')
-  $ldaps_interfaces = suffix(prefix($::openldap::server::ldaps_interfaces, 'ldaps://'), '/')
+  $backend_modules   = $::openldap::server::backend_modules
+  $data_directory    = $::openldap::server::data_directory
+  $db_backend        = $::openldap::server::db_backend
+  $group             = $::openldap::server::group
+  $interfaces        = $::openldap::server::interfaces
+  $module_extension  = $::openldap::server::module_extension
+  $overlay_packages  = $::openldap::server::overlay_packages
+  $password_hash     = $::openldap::server::password_hash
+  $password_modules  = $::openldap::server::password_modules
+  $password_packages = $::openldap::server::password_packages
+  $replica_dn        = $::openldap::server::replica_dn
+  $user              = $::openldap::server::user
 
   file { $data_directory:
     ensure       => directory,
@@ -31,7 +28,7 @@ class openldap::server::config {
     ],
   }
 
-  case $::osfamily { # lint:ignore:case_without_default
+  case $::osfamily {
     'RedHat': {
       case $::operatingsystemmajrelease {
         '6': {
@@ -46,7 +43,7 @@ class openldap::server::config {
         owner   => 0,
         group   => 0,
         mode    => '0644',
-        content => template('openldap/sysconfig.erb'),
+        content => template("${module_name}/sysconfig.erb"),
         notify  => Class['::openldap::server::service'],
       }
     }
@@ -56,9 +53,12 @@ class openldap::server::config {
         owner   => 0,
         group   => 0,
         mode    => '0644',
-        content => template('openldap/default.erb'),
+        content => template("${module_name}/default.erb"),
         notify  => Class['::openldap::server::service'],
       }
+    }
+    default: {
+      # noop
     }
   }
 
@@ -70,9 +70,9 @@ class openldap::server::config {
       'olcArgsFile'                => $::openldap::server::args_file,
       'olcAuthzPolicy'             => $::openldap::server::authz_policy,
       'olcLocalSSF'                => $::openldap::server::local_ssf,
-      'olcLogLevel'                => $::openldap::server::log_level,
+      'olcLogLevel'                => openldap::flatten_generic($::openldap::server::log_level),
       'olcPidFile'                 => $::openldap::server::pid_file,
-      'olcSecurity'                => $::openldap::server::security,
+      'olcSecurity'                => openldap::flatten_security($::openldap::server::security),
       'olcTLSCACertificateFile'    => $::openldap::server::ssl_ca,
       'olcTLSCACertificatePath'    => $::openldap::server::ssl_certs_dir,
       'olcTLSCertificateFile'      => $::openldap::server::ssl_cert,
@@ -123,17 +123,17 @@ class openldap::server::config {
   #   syncprov  => '{0}syncprov',
   #   smbk5pwd  => '{1}smbk5pwd',
   # }
-  $overlay_index = hash(flatten(zip($overlays, openldap_values($overlays))))
+  $overlay_index = hash(flatten(zip($overlays, openldap::values($overlays))))
 
-  $_password_hash = $password_hash ? {
-    undef   => '',
-    default => $password_hash,
+  if $password_hash {
+    # Generate a unique list of modules needed to satisfy the chosen password
+    # hashes and subsequently a unique list of packages needed to be installed
+    $_password_modules  = unique(delete_undef_values($password_hash.map |String $x| { $password_modules[$x] }))
+    $_password_packages = unique(delete_undef_values($_password_modules.map |String $x| { $password_packages[$x] }))
+  } else {
+    $_password_modules  = []
+    $_password_packages = []
   }
-
-  # Generate a unique list of modules needed to satisfy the chosen password
-  # hashes and subsequently a unique list of packages needed to be installed
-  $password_modules  = parsejson(inline_template('<%= @_password_hash.split(/\s+/).map { |x| @_password_modules[x] }.compact.uniq.to_json  %>')) # lint:ignore:140chars
-  $password_packages = parsejson(inline_template('<%= @password_modules.map { |x| @_password_packages[x] }.compact.uniq.to_json %>'))
 
   $modules = flatten([delete_undef_values([
     member($backend_modules, 'monitor') ? {
@@ -152,10 +152,10 @@ class openldap::server::config {
       },
       default => undef,
     },
-  ]), $overlays, $password_modules])
+  ]), $overlays, $_password_modules])
 
   # Convert ['module1', 'module2'] into ['{0}module1.la', '{1}module2.la']
-  $module_load = suffix(openldap_values($modules), $module_extension)
+  $module_load = suffix(openldap::values($modules), $module_extension)
 
   openldap { 'cn=module{0},cn=config':
     ensure     => present,
@@ -166,8 +166,8 @@ class openldap::server::config {
     },
   }
 
-  if size($password_packages) > 0 {
-    package { $password_packages:
+  if size($_password_packages) > 0 {
+    package { $_password_packages:
       ensure => present,
       before => Openldap['cn=module{0},cn=config'],
     }
@@ -181,8 +181,9 @@ class openldap::server::config {
     },
   }
 
-  ::openldap::server::schema { 'core':
-    position => 0,
+  openldap_schema { 'core':
+    ensure => present,
+    ldif   => "${::openldap::server::schema_dir}/core.ldif",
   }
 
   openldap { 'olcDatabase={-1}frontend,cn=config':
@@ -193,18 +194,13 @@ class openldap::server::config {
         'olcFrontendConfig',
       ],
       'olcDatabase'     => '{-1}frontend',
-      'olcSizeLimit'    => $::openldap::server::size_limit,
-      'olcTimeLimit'    => $::openldap::server::time_limit,
-      'olcPasswordHash' => $password_hash,
+      'olcSizeLimit'    => openldap::flatten_size_limit($::openldap::server::size_limit),
+      'olcTimeLimit'    => openldap::flatten_time_limit($::openldap::server::time_limit),
+      'olcPasswordHash' => openldap::flatten_generic($password_hash),
     }),
   }
 
   if $::openldap::server::chain {
-    $_chain_return_error = $::openldap::server::chain_return_error ? {
-      undef   => undef,
-      default => bool2str($::openldap::server::chain_return_error, 'TRUE', 'FALSE'),
-    }
-
     openldap { 'olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config':
       ensure     => present,
       attributes => delete_undef_values({
@@ -213,29 +209,27 @@ class openldap::server::config {
           'olcChainConfig',
         ],
         'olcOverlay'          => '{0}chain',
-        'olcChainReturnError' => $_chain_return_error,
+        'olcChainReturnError' => openldap::boolean($::openldap::server::chain_return_error),
       }),
       require    => Openldap['cn=module{0},cn=config'],
     }
 
-    $_chain_rebind_as_user = $::openldap::server::chain_rebind_as_user ? {
-      undef   => undef,
-      default => bool2str($::openldap::server::chain_rebind_as_user, 'TRUE', 'FALSE'),
-    }
+    $::openldap::server::update_ref.each |Integer $i, Bodgitlib::LDAP::URI::Simple $uri| {
 
-    openldap { 'olcDatabase={0}ldap,olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config':
-      ensure     => present,
-      attributes => delete_undef_values({
-        'objectClass'       => [
-          'olcLDAPConfig',
-          'olcChainDatabase',
-        ],
-        'olcDatabase'       => '{0}ldap',
-        'olcDbURI'          => $::openldap::server::update_ref,
-        'olcDbRebindAsUser' => $_chain_rebind_as_user,
-        'olcDbIDAssertBind' => $::openldap::server::chain_id_assert_bind,
-        'olcDbStartTLS'     => $::openldap::server::chain_tls,
-      }),
+      openldap { "olcDatabase={${i}}ldap,olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config":
+        ensure     => present,
+        attributes => delete_undef_values({
+          'objectClass'       => [
+            'olcLDAPConfig',
+            'olcChainDatabase',
+          ],
+          'olcDatabase'       => "{${i}}ldap",
+          'olcDbURI'          => $uri,
+          'olcDbRebindAsUser' => openldap::boolean($::openldap::server::chain_rebind_as_user),
+          'olcDbIDAssertBind' => openldap::flatten_ldap_id_assert_bind($::openldap::server::chain_id_assert_bind),
+          'olcDbStartTLS'     => openldap::flatten_ldap_tls($::openldap::server::chain_tls),
+        }),
+      }
     }
   }
 
@@ -262,20 +256,46 @@ class openldap::server::config {
   # Assume foo backend uses olcFooConfig class, works for *db at least
   $object_class = sprintf('olc%sConfig', capitalize($db_backend))
 
+  $syncprov_indices = [[['entryCSN', 'entryUUID'], ['eq']]]
+
   # syncprov overlay is required, i.e. this is a master/producer
   if $::openldap::server::syncprov {
 
-    $replica_access = "to * by dn.exact=\"${replica_dn}\" read"
-    $replica_limits = "dn.exact=\"${replica_dn}\" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited" # lint:ignore:140chars
+    $replica_access = $replica_dn.map |String $x| {
+      "to * by dn.exact=\"${x}\" read"
+    }
+
+    $replica_limits = $replica_dn.map |String $x| {
+      {
+        'selector' => "dn.exact=\"${x}\"",
+        'time'     => {
+          'soft' => 'unlimited',
+          'hard' => 'unlimited',
+        },
+        'size'     => {
+          'soft' => 'unlimited',
+          'hard' => 'unlimited',
+        },
+      }
+    }
 
     # Prepend replica ACL to any on the main database and also create indices
     # required by the overlay
-    $access  = flatten(["${replica_access} by * break",
-      $::openldap::server::access])
-    $indices = openldap_unique_indices(
-      flatten([$::openldap::server::indices, 'entryCSN,entryUUID eq'])
-    )
-    $limits  = flatten([$replica_limits, $::openldap::server::limits])
+    $access = $replica_access.map |String $x| {
+      "${x} by * break"
+    } + $::openldap::server::access
+
+    if $::openldap::server::indices {
+      $indices = $::openldap::server::indices + $syncprov_indices
+    } else {
+      $indices = $syncprov_indices
+    }
+
+    if $::openldap::server::limits {
+      $limits = $replica_limits + $::openldap::server::limits
+    } else {
+      $limits = $replica_limits
+    }
 
     # accesslog overlay is required, i.e. delta-syncrepl
     if $::openldap::server::accesslog {
@@ -294,22 +314,18 @@ class openldap::server::config {
             'olcDatabaseConfig',
             $object_class,
           ],
-          'olcAccess'         => openldap_values($replica_access),
+          'olcAccess'         => openldap::values($replica_access),
           'olcDatabase'       => "{2}${db_backend}",
           'olcDbCacheSize'    => $::openldap::server::accesslog_cachesize,
-          'olcDbCheckpoint'   => $::openldap::server::accesslog_checkpoint,
-          'olcDbConfig'       => openldap_values($::openldap::server::accesslog_db_config),
+          'olcDbCheckpoint'   => openldap::flatten_checkpoint($::openldap::server::accesslog_checkpoint),
+          'olcDbConfig'       => openldap::values($::openldap::server::accesslog_db_config),
           'olcDbDirectory'    => "${data_directory}/log",
           'olcDbDNcacheSize'  => $::openldap::server::accesslog_dn_cachesize,
           'olcDbIDLcacheSize' => $::openldap::server::accesslog_index_cachesize,
           'olcDbIndex'        => [
-            'entryCSN eq',
-            'objectClass eq',
-            'reqEnd eq',
-            'reqResult eq',
-            'reqStart eq',
+            'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
           ],
-          'olcLimits'         => openldap_values($replica_limits),
+          'olcLimits'         => openldap::values(openldap::flatten_limits($replica_limits)),
           'olcRootDN'         => $::openldap::server::root_dn,
           'olcSuffix'         => 'cn=log',
         }),
@@ -324,9 +340,9 @@ class openldap::server::config {
             'olcSyncProvConfig',
           ],
           'olcOverlay'      => '{0}syncprov',
-          'olcSpCheckpoint' => $::openldap::server::syncprov_checkpoint,
-          'olcSpNoPresent'  => 'TRUE',
-          'olcSpReloadHint' => 'TRUE',
+          'olcSpCheckpoint' => openldap::flatten_checkpoint($::openldap::server::syncprov_checkpoint),
+          'olcSpNoPresent'  => openldap::boolean(true),
+          'olcSpReloadHint' => openldap::boolean(true),
           'olcSpSessionlog' => $::openldap::server::syncprov_sessionlog,
         }),
         require    => Openldap['cn=module{0},cn=config'],
@@ -342,11 +358,13 @@ class openldap::server::config {
 
     # If this is a slave/consumer, create necessary indices
     if $::openldap::server::syncrepl {
-      $indices = openldap_unique_indices(
-        flatten([$::openldap::server::indices, 'entryCSN,entryUUID eq'])
-      )
+      if $::openldap::server::indices {
+        $indices = $::openldap::server::indices + $syncprov_indices
+      } else {
+        $indices = $syncprov_indices
+      }
     } else {
-      $indices = openldap_unique_indices($::openldap::server::indices)
+      $indices = $::openldap::server::indices
     }
 
     $limits = $::openldap::server::limits
@@ -368,21 +386,21 @@ class openldap::server::config {
         'olcDatabaseConfig',
         $object_class,
       ],
-      'olcAccess'         => openldap_values($access),
+      'olcAccess'         => openldap::values($access),
       'olcDatabase'       => "{${db_index}}${db_backend}",
       'olcDbCacheSize'    => $::openldap::server::data_cachesize,
-      'olcDbCheckpoint'   => $::openldap::server::data_checkpoint,
-      'olcDbConfig'       => openldap_values($::openldap::server::data_db_config),
+      'olcDbCheckpoint'   => openldap::flatten_checkpoint($::openldap::server::data_checkpoint),
+      'olcDbConfig'       => openldap::values($::openldap::server::data_db_config),
       'olcDbDirectory'    => "${data_directory}/data",
       'olcDbDNcacheSize'  => $::openldap::server::data_dn_cachesize,
       'olcDbIDLcacheSize' => $::openldap::server::data_index_cachesize,
-      'olcDbIndex'        => $indices,
-      'olcLimits'         => openldap_values($limits),
+      'olcDbIndex'        => openldap::flatten_indices($indices),
+      'olcLimits'         => openldap::values(openldap::flatten_limits($limits)),
       'olcRootDN'         => $::openldap::server::root_dn,
       'olcRootPW'         => $::openldap::server::root_password,
       'olcSuffix'         => $::openldap::server::suffix,
       # slave/consumer
-      'olcSyncrepl'       => openldap_values($::openldap::server::syncrepl),
+      'olcSyncrepl'       => openldap::values(openldap::flatten_syncrepl($::openldap::server::syncrepl)),
       'olcUpdateRef'      => $::openldap::server::update_ref,
     }),
     require    => Openldap['cn=module{0},cn=config'],
@@ -397,8 +415,8 @@ class openldap::server::config {
           'olcSyncProvConfig',
         ],
         'olcOverlay'      => $overlay_index['syncprov'],
-        'olcSpCheckpoint' => $::openldap::server::syncprov_checkpoint,
-        'olcSpReloadHint' => 'TRUE',
+        'olcSpCheckpoint' => openldap::flatten_checkpoint($::openldap::server::syncprov_checkpoint),
+        'olcSpReloadHint' => openldap::boolean(true),
         'olcSpSessionlog' => $::openldap::server::syncprov_sessionlog,
       }),
       require    => Openldap['cn=module{0},cn=config'],
@@ -415,7 +433,7 @@ class openldap::server::config {
           'olcOverlay'          => $overlay_index['accesslog'],
           'olcAccessLogDB'      => 'cn=log',
           'olcAccessLogOps'     => 'writes',
-          'olcAccessLogSuccess' => 'TRUE',
+          'olcAccessLogSuccess' => openldap::boolean(true),
           'olcAccessLogPurge'   => '07+00:00 01+00:00',
         }),
         require    => Openldap['cn=module{0},cn=config'],
@@ -472,26 +490,13 @@ class openldap::server::config {
           'olcUniqueConfig',
         ],
         'olcOverlay'   => $overlay_index['unique'],
-        'olcUniqueURI' => $::openldap::server::unique_uri,
+        'olcUniqueURI' => openldap::flatten_unique($::openldap::server::unique_uri),
       }),
       require    => Openldap['cn=module{0},cn=config'],
     }
   }
 
   if $::openldap::server::ppolicy {
-    $_ppolicy_hash_cleartext  = $::openldap::server::ppolicy_hash_cleartext ? {
-      undef   => undef,
-      default => bool2str($::openldap::server::ppolicy_hash_cleartext, 'TRUE', 'FALSE'),
-    }
-    $_ppolicy_use_lockout     = $::openldap::server::ppolicy_use_lockout ? {
-      undef   => undef,
-      default => bool2str($::openldap::server::ppolicy_use_lockout, 'TRUE', 'FALSE'),
-    }
-    $_ppolicy_forward_updates = $::openldap::server::ppolicy_forward_updates ? {
-      undef   => undef,
-      default => bool2str($::openldap::server::ppolicy_forward_updates, 'TRUE' ,'FALSE'),
-    }
-
     openldap { "olcOverlay=${overlay_index['ppolicy']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
@@ -501,9 +506,9 @@ class openldap::server::config {
         ],
         'olcOverlay'               => $overlay_index['ppolicy'],
         'olcPPolicyDefault'        => $::openldap::server::ppolicy_default,
-        'olcPPolicyHashCleartext'  => $_ppolicy_hash_cleartext,
-        'olcPPolicyUseLockout'     => $_ppolicy_use_lockout,
-        'olcPPolicyForwardUpdates' => $_ppolicy_forward_updates,
+        'olcPPolicyHashCleartext'  => openldap::boolean($::openldap::server::ppolicy_hash_cleartext),
+        'olcPPolicyUseLockout'     => openldap::boolean($::openldap::server::ppolicy_use_lockout),
+        'olcPPolicyForwardUpdates' => openldap::boolean($::openldap::server::ppolicy_forward_updates),
       }),
       require    => Openldap['cn=module{0},cn=config'],
     }

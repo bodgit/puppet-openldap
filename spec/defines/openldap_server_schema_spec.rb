@@ -6,12 +6,6 @@ describe 'openldap::server::schema' do
     'cosine'
   end
 
-  let(:params) do
-    {
-      :position => 0,
-    }
-  end
-
   on_supported_os.each do |os, facts|
     context "on #{os}" do
       let(:facts) do
@@ -22,7 +16,7 @@ describe 'openldap::server::schema' do
         it { expect { should compile }.to raise_error(/must include the openldap::server class/) }
       end
 
-      context 'with openldap::server class included' do
+      context 'with openldap::server class included', :compile do
         let(:pre_condition) do
           <<-EOF
             include ::openldap
@@ -35,23 +29,13 @@ describe 'openldap::server::schema' do
           EOF
         end
 
-        it { expect { should compile }.to raise_error(/Expected 0 to be greater or equal to 1/) }
+        it { should contain_openldap__server__schema('cosine') }
 
-        context 'and a correct position', :compile do
-          let(:params) do
-            {
-              :position => 1,
-            }
-          end
-
-          it { should contain_openldap__server__schema('cosine') }
-
-          case facts[:osfamily]
-          when 'Debian'
-            it { should contain_openldap('cn={1}cosine,cn=schema,cn=config').with_ldif('/etc/ldap/schema/cosine.ldif') }
-          when 'RedHat'
-            it { should contain_openldap('cn={1}cosine,cn=schema,cn=config').with_ldif('/etc/openldap/schema/cosine.ldif') }
-          end
+        case facts[:osfamily]
+        when 'Debian'
+          it { should contain_openldap_schema('cosine').with_ldif('/etc/ldap/schema/cosine.ldif') }
+        when 'RedHat'
+          it { should contain_openldap_schema('cosine').with_ldif('/etc/openldap/schema/cosine.ldif') }
         end
       end
     end

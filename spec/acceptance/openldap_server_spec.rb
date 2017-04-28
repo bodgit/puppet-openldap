@@ -12,7 +12,7 @@ describe 'openldap::server' do
       samba_schema = '/usr/share/doc/samba-3.6.23/LDAP/samba.ldif'
     when '7'
       db_package   = 'libdb-utils'
-      samba_schema = '/usr/share/doc/samba-4.2.10/LDAP/samba.ldif'
+      samba_schema = '/usr/share/doc/samba-4.4.4/LDAP/samba.ldif'
     end
     service_name  = 'slapd'
   when 'Debian'
@@ -63,7 +63,7 @@ describe 'openldap::server' do
         auditlog                => true,
         auditlog_file           => '/tmp/auditlog.ldif',
         data_cachesize          => 100,
-        data_checkpoint         => '1 1',
+        data_checkpoint         => [1, 1],
         data_db_config          => [
           'set_cachesize 0 2097152 0',
           'set_lk_max_objects 1500',
@@ -72,40 +72,50 @@ describe 'openldap::server' do
         ],
         data_dn_cachesize       => 100,
         data_index_cachesize    => 300,
-        ldap_interfaces         => ['#{default.ip}'],
+        interfaces              => ['ldap://#{default.ip}/'],
         local_ssf               => 256,
-        log_level               => 65535,
+        log_level               => [65535],
         ppolicy                 => true,
         ppolicy_default         => 'cn=passwordDefault,dc=example,dc=com',
         ppolicy_forward_updates => false,
         ppolicy_hash_cleartext  => true,
         ppolicy_use_lockout     => false,
-        size_limit              => 'size.soft=1 size.hard=unlimited',
+        size_limit              => {
+          'soft' => 1,
+          'hard' => 'unlimited',
+        },
         smbk5pwd                => true,
         smbk5pwd_backends       => ['samba'],
         unique                  => true,
-        unique_uri              => ['ldap:///dc=example,dc=com?uidNumber?sub'],
+        unique_uri              => [
+          {
+            'uri' => ['ldap:///dc=example,dc=com?uidNumber?sub'],
+          },
+        ],
         require                 => Class['::rsyslog::client'],
       }
       ::openldap::server::schema { 'cosine':
-        position => 1,
+        ensure => present,
       }
       ::openldap::server::schema { 'inetorgperson':
-        position => 2,
+        ensure  => present,
+        require => ::Openldap::Server::Schema['cosine'],
       }
       ::openldap::server::schema { 'nis':
-        position => 3,
+        ensure  => present,
+        require => ::Openldap::Server::Schema['inetorgperson'],
       }
       ::openldap::server::schema { 'ppolicy':
-        position => 4,
+        ensure => present,
       }
 
       package { '#{samba_package}':
         ensure => present,
       }
       ::openldap::server::schema { 'samba':
-        ldif     => '#{samba_schema}',
-        position => 5,
+        ensure  => present,
+        ldif    => '#{samba_schema}',
+        require => ::Openldap::Server::Schema['nis'],
       }
 
       package { '#{db_package}':

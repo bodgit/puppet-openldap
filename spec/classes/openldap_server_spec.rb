@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 shared_examples_for 'openldap::server' do
-  it { should contain_anchor('openldap::server::begin') }
-  it { should contain_anchor('openldap::server::end') }
   it { should contain_class('openldap::server') }
   it { should contain_class('openldap::server::config') }
   it { should contain_class('openldap::server::install') }
@@ -17,7 +15,6 @@ shared_examples_for 'openldap::server' do
     }
   ) }
   it { should contain_openldap('olcDatabase={1}monitor,cn=config') }
-  it { should contain_openldap__server__schema('core') }
 end
 
 shared_examples_for 'openldap::server on Debian' do
@@ -30,7 +27,7 @@ shared_examples_for 'openldap::server on Debian' do
   it { should contain_file('/var/lib/ldap') }
   it { should contain_file('/var/lib/ldap/data') }
   it { should contain_group('openldap') }
-  it { should contain_openldap('cn={0}core,cn=schema,cn=config').with_ldif('/etc/ldap/schema/core.ldif') }
+  it { should contain_openldap_schema('core').with_ldif('/etc/ldap/schema/core.ldif') }
   it { should contain_package('slapd') }
   it { should contain_service('slapd') }
   it { should contain_user('openldap') }
@@ -44,7 +41,7 @@ shared_examples_for 'openldap::server on RedHat' do
   it { should contain_file('/var/lib/ldap') }
   it { should contain_file('/var/lib/ldap/data') }
   it { should contain_group('ldap') }
-  it { should contain_openldap('cn={0}core,cn=schema,cn=config').with_ldif('/etc/openldap/schema/core.ldif') }
+  it { should contain_openldap_schema('core').with_ldif('/etc/openldap/schema/core.ldif') }
   it { should contain_package('openldap-servers') }
   it { should contain_service('slapd') }
   it { should contain_user('ldap') }
@@ -57,7 +54,7 @@ describe 'openldap::server' do
       :root_dn       => 'cn=Manager,dc=example,dc=com',
       :root_password => 'secret',
       :suffix        => 'dc=example,dc=com',
-      :ssl_protocol  => '3.2',
+      :ssl_protocol  => 3.2,
     }
   end
 
@@ -69,7 +66,7 @@ describe 'openldap::server' do
       }
     end
 
-    it { expect { should compile }.to raise_error(/must include the openldap::client class/) }
+    it { expect { should compile }.to raise_error(/must include either the openldap or openldap::client class/) }
   end
 
   context 'with openldap::client class included' do
@@ -136,7 +133,12 @@ describe 'openldap::server' do
           let(:params) do
             super().merge(
               {
-                :password_hash     => '{SSHA} {SSHA512} {SSHA384} {TOTP1}',
+                :password_hash     => [
+                  '{SSHA}',
+                  '{SSHA512}',
+                  '{SSHA384}',
+                  '{TOTP1}',
+                ],
                 :password_packages => {
                   'pw-sha2' => 'openldap-sha2-package',
                   'pw-totp' => 'openldap-totp-package',
@@ -215,7 +217,11 @@ describe 'openldap::server' do
               {
                 :auditlog      => true,
                 :auditlog_file => '/tmp/auditlog.ldif',
-                :log_level     => '128 filter 0x1',
+                :log_level     => [
+                  128,
+                  'filter',
+                  0x1,
+                ],
                 :size_limit    => 500,
                 :time_limit    => 'unlimited',
               }
@@ -268,7 +274,7 @@ describe 'openldap::server' do
                 'objectClass'       => ['olcGlobal'],
                 'olcArgsFile'       => ['/var/run/slapd/slapd.args'],
                 'olcLocalSSF'       => ['256'],
-                'olcLogLevel'       => ['128 filter 0x1'],
+                'olcLogLevel'       => ['128 filter 1'],
                 'olcPidFile'        => ['/var/run/slapd/slapd.pid'],
                 'olcTLSProtocolMin' => ['3.2'],
               }
@@ -291,7 +297,7 @@ describe 'openldap::server' do
                 'objectClass'       => ['olcGlobal'],
                 'olcArgsFile'       => ['/var/run/openldap/slapd.args'],
                 'olcLocalSSF'       => ['256'],
-                'olcLogLevel'       => ['128 filter 0x1'],
+                'olcLogLevel'       => ['128 filter 1'],
                 'olcPidFile'        => ['/var/run/openldap/slapd.pid'],
                 'olcTLSProtocolMin' => ['3.2'],
               }
@@ -390,8 +396,12 @@ describe 'openldap::server' do
               {
                 :unique     => true,
                 :unique_uri => [
-                  'ldap:///dc=example,dc=com?uidNumber?sub',
-                  'ldap:///dc=example,dc=com?homeDirectory?sub',
+                  {
+                    'uri' => ['ldap:///dc=example,dc=com?uidNumber?sub'],
+                  },
+                  {
+                    'uri' => ['ldap:///dc=example,dc=com?homeDirectory?sub'],
+                  },
                 ],
               }
             )
@@ -618,7 +628,7 @@ describe 'openldap::server' do
             super().merge(
               {
                 :data_cachesize       => 1500,
-                :data_checkpoint      => '1024 10',
+                :data_checkpoint      => [1024, 10],
                 :data_db_config       => [
                   'set_cachesize 0 2097152 0',
                   'set_lk_max_objects 1500',
@@ -627,10 +637,16 @@ describe 'openldap::server' do
                 ],
                 :data_dn_cachesize    => 1500,
                 :data_index_cachesize => 4500,
-                :size_limit           => 'size.soft=10 size.hard=20',
+                :size_limit           => {
+                  'soft' => 10,
+                  'hard' => 20,
+                },
                 :syncprov             => true,
-                :time_limit           => 'time.soft=10 time.hard=60',
-                :replica_dn           => 'cn=replicator,dc=example,dc=com',
+                :time_limit           => {
+                  'soft' => 10,
+                  'hard' => 60,
+                },
+                :replica_dn           => ['cn=replicator,dc=example,dc=com'],
               }
             )
           end
@@ -671,9 +687,9 @@ describe 'openldap::server' do
               'olcDbDirectory'    => ['/var/lib/ldap/data'],
               'olcDbDNcacheSize'  => ['1500'],
               'olcDbIDLcacheSize' => ['4500'],
-              'olcDbIndex'        => ['entryCSN eq', 'entryUUID eq'],
+              'olcDbIndex'        => ['entryCSN,entryUUID eq'],
               'olcLimits'         => [
-                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" size.soft=unlimited size.hard=unlimited time.soft=unlimited time.hard=unlimited'
               ],
               'olcRootDN'         => ['cn=Manager,dc=example,dc=com'],
               'olcRootPW'         => ['secret'],
@@ -715,7 +731,7 @@ describe 'openldap::server' do
                 :auditlog      => true,
                 :auditlog_file => '/tmp/auditlog.ldif',
                 :syncprov      => true,
-                :replica_dn    => 'cn=replicator,dc=example,dc=com',
+                :replica_dn    => ['cn=replicator,dc=example,dc=com'],
               }
             )
           end
@@ -736,9 +752,9 @@ describe 'openldap::server' do
               ],
               'olcDatabase'    => ['{2}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
               'olcLimits'      => [
-                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" size.soft=unlimited size.hard=unlimited time.soft=unlimited time.hard=unlimited'
               ],
               'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
               'olcRootPW'      => ['secret'],
@@ -790,7 +806,7 @@ describe 'openldap::server' do
             super().merge(
               {
                 :syncprov   => true,
-                :replica_dn => 'cn=replicator,dc=example,dc=com',
+                :replica_dn => ['cn=replicator,dc=example,dc=com'],
                 :accesslog  => true,
               }
             )
@@ -813,10 +829,10 @@ describe 'openldap::server' do
               'olcDatabase'    => ['{2}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/log'],
               'olcDbIndex'     => [
-                'entryCSN eq', 'objectClass eq', 'reqEnd eq', 'reqResult eq', 'reqStart eq'
+                'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
               ],
               'olcLimits'      => [
-                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" size.soft=unlimited size.hard=unlimited time.soft=unlimited time.hard=unlimited'
               ],
               'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
               'olcSuffix'      => ['cn=log'],
@@ -835,9 +851,9 @@ describe 'openldap::server' do
               ],
               'olcDatabase'    => ['{3}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
               'olcLimits'      => [
-                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" size.soft=unlimited size.hard=unlimited time.soft=unlimited time.hard=unlimited'
               ],
               'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
               'olcRootPW'      => ['secret'],
@@ -882,10 +898,10 @@ describe 'openldap::server' do
                 :auditlog                  => true,
                 :auditlog_file             => '/tmp/auditlog.ldif',
                 :syncprov                  => true,
-                :replica_dn                => 'cn=replicator,dc=example,dc=com',
+                :replica_dn                => ['cn=replicator,dc=example,dc=com'],
                 :accesslog                 => true,
                 :accesslog_cachesize       => 1500,
-                :accesslog_checkpoint      => '1024 10',
+                :accesslog_checkpoint      => [1024, 10],
                 :accesslog_db_config       => [
                   'set_cachesize 0 2097152 0',
                   'set_lk_max_objects 1500',
@@ -925,10 +941,10 @@ describe 'openldap::server' do
               'olcDbDNcacheSize'  => ['1500'],
               'olcDbIDLcacheSize' => ['4500'],
               'olcDbIndex'        => [
-                'entryCSN eq', 'objectClass eq', 'reqEnd eq', 'reqResult eq', 'reqStart eq'
+                'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
               ],
               'olcLimits'         => [
-                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" size.soft=unlimited size.hard=unlimited time.soft=unlimited time.hard=unlimited'
               ],
               'olcRootDN'         => ['cn=Manager,dc=example,dc=com'],
               'olcSuffix'         => ['cn=log'],
@@ -947,9 +963,9 @@ describe 'openldap::server' do
               ],
               'olcDatabase'    => ['{3}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
               'olcLimits'      => [
-                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" size.soft=unlimited size.hard=unlimited time.soft=unlimited time.hard=unlimited'
               ],
               'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
               'olcRootPW'      => ['secret'],
@@ -1005,7 +1021,7 @@ describe 'openldap::server' do
               {
                 :accesslog                 => true,
                 :accesslog_cachesize       => 1500,
-                :accesslog_checkpoint      => '1024 10',
+                :accesslog_checkpoint      => [1024, 10],
                 :accesslog_db_config       => [
                   'set_cachesize 0 2097152 0',
                   'set_lk_max_objects 1500',
@@ -1022,7 +1038,7 @@ describe 'openldap::server' do
                 ],
                 :smbk5pwd_must_change      => 2592000,
                 :syncprov                  => true,
-                :replica_dn                => 'cn=replicator,dc=example,dc=com',
+                :replica_dn                => ['cn=replicator,dc=example,dc=com'],
               }
             )
           end
@@ -1054,10 +1070,10 @@ describe 'openldap::server' do
               'olcDbDNcacheSize'  => ['1500'],
               'olcDbIDLcacheSize' => ['4500'],
               'olcDbIndex'        => [
-                'entryCSN eq', 'objectClass eq', 'reqEnd eq', 'reqResult eq', 'reqStart eq'
+                'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
               ],
               'olcLimits'         => [
-                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" size.soft=unlimited size.hard=unlimited time.soft=unlimited time.hard=unlimited'
               ],
               'olcRootDN'         => ['cn=Manager,dc=example,dc=com'],
               'olcSuffix'         => ['cn=log'],
@@ -1076,9 +1092,9 @@ describe 'openldap::server' do
               ],
               'olcDatabase'    => ['{3}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
               'olcLimits'      => [
-                '{0}dn.exact="cn=replicator,dc=example,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited'
+                '{0}dn.exact="cn=replicator,dc=example,dc=com" size.soft=unlimited size.hard=unlimited time.soft=unlimited time.hard=unlimited'
               ],
               'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
               'olcRootPW'      => ['secret'],
@@ -1147,9 +1163,13 @@ describe 'openldap::server' do
             super().merge(
               {
                 :syncrepl   => [
-                  'rid=001 provider=ldap://ldap.example.com/',
+                  {
+                    'rid'        => 1,
+                    'provider'   => 'ldap://ldap.example.com/',
+                    'searchbase' => 'dc=example,dc=com',
+                  },
                 ],
-                :update_ref => 'ldap://ldap.example.com/',
+                :update_ref => ['ldap://ldap.example.com/'],
               }
             )
           end
@@ -1167,11 +1187,11 @@ describe 'openldap::server' do
               'olcAccess'      => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage'],
               'olcDatabase'    => ['{2}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
               'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
               'olcRootPW'      => ['secret'],
               'olcSuffix'      => ['dc=example,dc=com'],
-              'olcSyncrepl'    => ['{0}rid=001 provider=ldap://ldap.example.com/'],
+              'olcSyncrepl'    => ['{0}rid=001 provider=ldap://ldap.example.com/ searchbase="dc=example,dc=com"'],
               'olcUpdateRef'   => ['ldap://ldap.example.com/'],
             }
           ) }
@@ -1203,14 +1223,24 @@ describe 'openldap::server' do
             super().merge(
               {
                 :chain                => true,
-                :chain_id_assert_bind => 'mode=self flags=proxy-authz-critical',
+                :chain_id_assert_bind => {
+                  'bindmethod' => 'simple',
+                  'mode'       => 'self',
+                  'flags'      => ['proxy-authz-critical'],
+                },
                 :chain_rebind_as_user => true,
                 :chain_return_error   => true,
-                :chain_tls            => 'start',
+                :chain_tls            => {
+                  'mode' => 'start',
+                },
                 :syncrepl             => [
-                  'rid=001 provider=ldap://ldap.example.com/',
+                  {
+                    'rid'        => 1,
+                    'provider'   => 'ldap://ldap.example.com/',
+                    'searchbase' => 'dc=example,dc=com',
+                  },
                 ],
-                :update_ref           => 'ldap://ldap.example.com/',
+                :update_ref           => ['ldap://ldap.example.com/'],
               }
             )
           end
@@ -1238,7 +1268,7 @@ describe 'openldap::server' do
               'olcDatabase'       => ['{0}ldap'],
               'olcDbURI'          => ['ldap://ldap.example.com/'],
               'olcDbRebindAsUser' => ['TRUE'],
-              'olcDbIDAssertBind' => ['mode=self flags=proxy-authz-critical'],
+              'olcDbIDAssertBind' => ['bindmethod=simple mode=self flags=proxy-authz-critical'],
               'olcDbStartTLS'     => ['start'],
             }
           ) }
@@ -1251,11 +1281,11 @@ describe 'openldap::server' do
               'olcAccess'      => ['{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage'],
               'olcDatabase'    => ['{2}hdb'],
               'olcDbDirectory' => ['/var/lib/ldap/data'],
-              'olcDbIndex'     => ['entryCSN eq', 'entryUUID eq'],
+              'olcDbIndex'     => ['entryCSN,entryUUID eq'],
               'olcRootDN'      => ['cn=Manager,dc=example,dc=com'],
               'olcRootPW'      => ['secret'],
               'olcSuffix'      => ['dc=example,dc=com'],
-              'olcSyncrepl'    => ['{0}rid=001 provider=ldap://ldap.example.com/'],
+              'olcSyncrepl'    => ['{0}rid=001 provider=ldap://ldap.example.com/ searchbase="dc=example,dc=com"'],
               'olcUpdateRef'   => ['ldap://ldap.example.com/'],
             }
           ) }

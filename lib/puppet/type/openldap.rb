@@ -5,13 +5,18 @@ Puppet::Type.newtype(:openldap) do
   desc <<-DESC
 Manage OpenLDAP configuration objects.
 
-@example
+@example Sample usage
 
-  openldap { '':
+  openldap { 'cn=schema,cn=config':
+    ensure     => present,
+    attributes => {
+      'cn'          => 'schema',
+      'objectClass' => 'olcSchemaConfig',
+    },
   }
 DESC
 
-  @doc = 'Manage openldap configuration objects.'
+  @doc = 'Manage OpenLDAP configuration objects.'
 
   ensurable do
     defaultvalues

@@ -71,7 +71,7 @@ DESC
   end
 
   autorequire(:openldap_schema) do
-    autos []
+    autos = []
 
     # If this isn't the core schema, autorequire it
     autos << 'core' unless self[:name] == 'core'

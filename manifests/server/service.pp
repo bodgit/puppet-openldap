@@ -1,4 +1,4 @@
-#
+# @!visibility private
 class openldap::server::service {
 
   service { $::openldap::server::server_service_name:

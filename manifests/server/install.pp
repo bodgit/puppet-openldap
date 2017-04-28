@@ -1,11 +1,11 @@
-#
+# @!visibility private
 class openldap::server::install {
 
   $package_name = $::openldap::server::package_name
   $user         = $::openldap::server::user
   $group        = $::openldap::server::group
 
-  case $::osfamily { # lint:ignore:case_without_default
+  case $::osfamily {
     'RedHat': {
       $responsefile     = undef
       $comment          = 'OpenLDAP server'
@@ -34,6 +34,9 @@ class openldap::server::install {
         content => file("openldap/${::osfamily}/slapd.preseed"),
         before  => Package[$package_name],
       }
+    }
+    default: {
+      # noop
     }
   }
 

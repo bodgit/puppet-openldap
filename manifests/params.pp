@@ -1,11 +1,9 @@
 # @!visibility private
 class openldap::params {
 
-  $auditlog_file       = undef
-  $ldap_interfaces     = ['']
-  $ldaps_interfaces    = []
+  $access              = ['to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage']
+  $interfaces          = ['ldap:///']
   $local_ssf           = 256
-  $log_level           = undef
   $module_extension    = '.la'
   $password_modules    = {
     '{SHA256}'        => 'pw-sha2',
@@ -28,16 +26,8 @@ class openldap::params {
     '{KERBEROS}'      => 'pw-kerberos',
   }
   $password_packages   = {}
-  $ssl_ca              = undef
-  $ssl_cert            = undef
-  $ssl_certs_dir       = undef
-  $ssl_cipher          = undef
-  $ssl_dhparam         = undef
-  $ssl_key             = undef
-  $ssl_protocol        = undef
-  $syncprov_checkpoint = '100 10'
+  $syncprov_checkpoint = [100, 10]
   $syncprov_sessionlog = 100
-  $unique_uri          = undef
 
   case $::osfamily {
     'RedHat': {
