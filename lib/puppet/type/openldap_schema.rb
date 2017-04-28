@@ -70,6 +70,15 @@ DESC
     ['olcDatabase={-1}frontend,cn=config']
   end
 
+  autorequire(:openldap_schema) do
+    autos []
+
+    # If this isn't the core schema, autorequire it
+    autos << 'core' unless self[:name] == 'core'
+
+    autos
+  end
+
   autorequire(:file) do
     autos = []
 
