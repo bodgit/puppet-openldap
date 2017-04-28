@@ -5,7 +5,7 @@
 # class to install that single package.
 #
 # @example Declaring the class
-#   include ::openldap
+#   include ::openldap::client
 #
 # @param package_name The name of the package.
 #
