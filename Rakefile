@@ -5,7 +5,7 @@ require 'metadata-json-lint/rake_task'
 require 'puppet-strings/tasks'
 
 CLEAN.include('spec/fixtures/manifests', 'spec/fixtures/modules')
-CLOBBER.include('.tmp', '.librarian', '.vagrant', 'Puppetfile.lock', 'log', 'junit', 'coverage')
+CLOBBER.include('.tmp', '.librarian', '.vagrant', 'Puppetfile.lock', 'log', 'junit', 'coverage', 'doc')
 
 task :spec => []; Rake::Task[:spec].clear
 task :spec do

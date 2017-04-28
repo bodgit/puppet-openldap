@@ -30,6 +30,7 @@ group :development, :test do
   gem 'specinfra', '>= 2.42.1',                           :require => false
   gem 'puppet-strings',                                   :require => false
   gem 'beaker-puppet_install_helper',                     :require => false
+  gem 'github_changelog_generator',                       :require => false
 end
 
 if facterversion = ENV['FACTER_GEM_VERSION']
