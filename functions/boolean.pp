@@ -1,4 +1,4 @@
-# Function to convert boolean values to their OpenLDAP form.
+# Convert boolean values to their OpenLDAP form.
 #
 # @param value The boolean value to convert, `undef` is passed through
 #   unchanged.
