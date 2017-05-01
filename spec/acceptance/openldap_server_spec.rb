@@ -3,9 +3,10 @@ require 'spec_helper_acceptance'
 describe 'openldap::server' do
   case fact('osfamily')
   when 'RedHat'
-    db_stat       = 'db_stat'
-    package_name  = 'openldap-servers'
-    samba_package = 'samba'
+    data_directory = '/var/lib/ldap'
+    db_stat        = 'db_stat'
+    package_name   = 'openldap-servers'
+    samba_package  = 'samba'
     case fact(:operatingsystemmajrelease)
     when '6'
       db_package   = 'db4-utils'
@@ -14,14 +15,23 @@ describe 'openldap::server' do
       db_package   = 'libdb-utils'
       samba_schema = '/usr/share/doc/samba-4.4.4/LDAP/samba.ldif'
     end
-    service_name  = 'slapd'
+    service_name   = 'slapd'
   when 'Debian'
-    db_package    = 'db5.3-util'
-    db_stat       = 'db5.3_stat'
-    package_name  = 'slapd'
-    samba_package = 'samba'
-    samba_schema  = '/usr/share/doc/samba/examples/LDAP/samba.ldif'
-    service_name  = 'slapd'
+    data_directory = '/var/lib/ldap'
+    db_package     = 'db5.3-util'
+    db_stat        = 'db5.3_stat'
+    package_name   = 'slapd'
+    samba_package  = 'samba'
+    samba_schema   = '/usr/share/doc/samba/examples/LDAP/samba.ldif'
+    service_name   = 'slapd'
+  when 'OpenBSD'
+    data_directory = '/var/openldap-data'
+    db_package     = 'db'
+    db_stat        = 'db4_stat'
+    package_name   = 'openldap-server'
+    samba_package  = 'samba-docs'
+    samba_schema   = '/usr/local/share/examples/samba/LDAP/samba.ldif'
+    service_name   = 'slapd'
   end
 
   it 'should work with no errors' do
@@ -36,21 +46,57 @@ describe 'openldap::server' do
     # end
 
     pp = <<-EOS
-      include ::firewall
-      class { '::rsyslog::client':
-        log_remote => false,
-        log_local  => true,
+      Package {
+        source => $::osfamily ? {
+          # $::architecture fact has gone missing on facter 3.x package currently installed
+          'OpenBSD' => "http://ftp.openbsd.org/pub/OpenBSD/${::operatingsystemrelease}/packages/amd64/",
+          default   => undef,
+        },
       }
-      file { "${::rsyslog::rsyslog_d}/slapd.conf":
-        ensure  => file,
-        owner   => 0,
-        group   => 0,
-        mode    => '0644',
-        content => "local4.* /var/log/slapd.log\n",
-        notify  => Service[$::rsyslog::service_name],
-      }
+
       include ::openldap
-      include ::openldap::client
+
+      if $::osfamily == 'OpenBSD' {
+        file { '/var/log/slapd.log':
+          ensure => file,
+          owner  => 0,
+          group  => 0,
+          mode   => '0644',
+        }
+
+        file_line { '/var/log/slapd.log':
+          ensure  => present,
+          path    => '/etc/syslog.conf',
+          line    => "local4.*\t/var/log/slapd.log",
+          require => File['/var/log/slapd.log'],
+          notify  => Service['syslogd'],
+        }
+
+        service { 'syslogd':
+          ensure => running,
+          enable => true,
+          before => Class['::openldap::server'],
+        }
+      } else {
+        include ::openldap::client
+        include ::firewall
+
+        class { '::rsyslog::client':
+          log_remote => false,
+          log_local  => true,
+          before     => Class['::openldap::server'],
+        }
+
+        file { "${::rsyslog::rsyslog_d}/slapd.conf":
+          ensure  => file,
+          owner   => 0,
+          group   => 0,
+          mode    => '0644',
+          content => "local4.* /var/log/slapd.log\n",
+          notify  => Service[$::rsyslog::service_name],
+        }
+      }
+
       class { '::openldap::server':
         root_dn                 => 'cn=Manager,dc=example,dc=com',
         root_password           => 'secret',
@@ -72,7 +118,6 @@ describe 'openldap::server' do
         ],
         data_dn_cachesize       => 100,
         data_index_cachesize    => 300,
-        interfaces              => ['ldap://#{default.ip}/'],
         local_ssf               => 256,
         log_level               => [65535],
         ppolicy                 => true,
@@ -84,7 +129,10 @@ describe 'openldap::server' do
           'soft' => 1,
           'hard' => 'unlimited',
         },
-        smbk5pwd                => true,
+        smbk5pwd                => $::osfamily ? {
+          'OpenBSD' => false,
+          default   => true,
+        },
         smbk5pwd_backends       => ['samba'],
         unique                  => true,
         unique_uri              => [
@@ -92,8 +140,8 @@ describe 'openldap::server' do
             'uri' => ['ldap:///dc=example,dc=com?uidNumber?sub'],
           },
         ],
-        require                 => Class['::rsyslog::client'],
       }
+
       ::openldap::server::schema { 'cosine':
         ensure => present,
       }
@@ -104,9 +152,6 @@ describe 'openldap::server' do
       ::openldap::server::schema { 'nis':
         ensure  => present,
         require => ::Openldap::Server::Schema['inetorgperson'],
-      }
-      ::openldap::server::schema { 'ppolicy':
-        ensure => present,
       }
 
       package { '#{samba_package}':
@@ -121,6 +166,7 @@ describe 'openldap::server' do
       package { '#{db_package}':
         ensure => present,
       }
+
       case $::osfamily {
         'Debian': {
           service { 'apparmor':
@@ -139,13 +185,13 @@ describe 'openldap::server' do
             notify  => Service['apparmor'],
           }
           exec { 'gzip -d #{samba_schema}.gz':
-            path    => ['/bin', '/usr/bin'],
+            path    => $::path,
             creates => '#{samba_schema}',
             require => Package['#{samba_package}'],
             before  => ::Openldap::Server::Schema['samba'],
           }
         }
-        'RedHat': {
+        default: {
           Package['#{samba_package}'] -> ::Openldap::Server::Schema['samba']
         }
       }
@@ -171,7 +217,7 @@ describe 'openldap::server' do
     it { should be_running }
   end
 
-  describe command('ldapsearch -Y EXTERNAL -H ldapi:/// -b cn=config | grep ^dn') do
+  describe command('ldapsearch -Y EXTERNAL -H ldapi:/// -b cn=config | grep ^dn'), :unless => fact('osfamily').eql?('OpenBSD') do
     its(:exit_status) { should eq 0 }
     its(:stdout) do
       should eq <<-EOS.gsub(/^ +/, '')
@@ -179,10 +225,10 @@ describe 'openldap::server' do
         dn: cn=module{0},cn=config
         dn: cn=schema,cn=config
         dn: cn={0}core,cn=schema,cn=config
-        dn: cn={1}cosine,cn=schema,cn=config
-        dn: cn={2}inetorgperson,cn=schema,cn=config
-        dn: cn={3}nis,cn=schema,cn=config
-        dn: cn={4}ppolicy,cn=schema,cn=config
+        dn: cn={1}ppolicy,cn=schema,cn=config
+        dn: cn={2}cosine,cn=schema,cn=config
+        dn: cn={3}inetorgperson,cn=schema,cn=config
+        dn: cn={4}nis,cn=schema,cn=config
         dn: cn={5}samba,cn=schema,cn=config
         dn: olcDatabase={-1}frontend,cn=config
         dn: olcDatabase={0}config,cn=config
@@ -196,17 +242,40 @@ describe 'openldap::server' do
     end
   end
 
+  describe command('ldapsearch -Y EXTERNAL -H ldapi:/// -b cn=config | grep ^dn'), :if => fact('osfamily').eql?('OpenBSD') do
+    its(:exit_status) { should eq 0 }
+    its(:stdout) do
+      should eq <<-EOS.gsub(/^ +/, '')
+        dn: cn=config
+        dn: cn=schema,cn=config
+        dn: cn={0}core,cn=schema,cn=config
+        dn: cn={1}ppolicy,cn=schema,cn=config
+        dn: cn={2}cosine,cn=schema,cn=config
+        dn: cn={3}inetorgperson,cn=schema,cn=config
+        dn: cn={4}nis,cn=schema,cn=config
+        dn: cn={5}samba,cn=schema,cn=config
+        dn: olcDatabase={-1}frontend,cn=config
+        dn: olcDatabase={0}config,cn=config
+        dn: olcDatabase={1}monitor,cn=config
+        dn: olcDatabase={2}hdb,cn=config
+        dn: olcOverlay={0}auditlog,olcDatabase={2}hdb,cn=config
+        dn: olcOverlay={1}unique,olcDatabase={2}hdb,cn=config
+        dn: olcOverlay={2}ppolicy,olcDatabase={2}hdb,cn=config
+      EOS
+    end
+  end
+
   # Import the example database
   describe command('ldapadd -Y EXTERNAL -H ldapi:/// -f /root/example.ldif') do
     its(:exit_status) { should eq 0 }
   end
 
   describe port(389) do
-    it { should be_listening.on(default.ip).with('tcp') }
+    it { should be_listening.on('0.0.0.0').with('tcp') }
   end
 
   # Test that TCP works, binds work, but that the soft size limit is triggered
-  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w password") do
+  describe command("ldapsearch -H ldap://127.0.0.1/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w password") do
     its(:exit_status) { should eq 4 }
     its(:stdout) { should match /^result: 4 Size limit exceeded$/ }
   end
@@ -218,18 +287,18 @@ describe 'openldap::server' do
 
   # Test that the ppolicy overlay is enforced with a pw change
   # that is under the char limit
-  describe command("ldappasswd -H ldap://#{default.ip}/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s secret") do
+  describe command("ldappasswd -H ldap://127.0.0.1/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s secret") do
     its(:exit_status) { should eq 1 }
     its(:stdout) { should match /Password fails quality checking policy/ }
   end
 
-  # Test password change that satifies the ppolicy overlay
-  describe command("ldappasswd -H ldap://#{default.ip}/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s verysecret") do
+  # Test password change that satisfies the ppolicy overlay
+  describe command("ldappasswd -H ldap://127.0.0.1/ -D uid=alice,ou=people,dc=example,dc=com -x -w password -s verysecret") do
     its(:exit_status) { should eq 0 }
   end
 
   # Test that TCP works, binds work, and that no password hashes are disclosed
-  describe command("ldapsearch -H ldap://#{default.ip}/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w verysecret -z max") do
+  describe command("ldapsearch -H ldap://127.0.0.1/ -b dc=example,dc=com -D uid=alice,ou=people,dc=example,dc=com -x -w verysecret -z max") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should_not match /^userPassword/ }
     its(:stdout) { should_not match /^sambaLMPassword/ }
@@ -244,7 +313,7 @@ describe 'openldap::server' do
 
   # Test password modification made it into the audit log including the
   # associated changes of the Samba hashes via the smbk5pwd overlay
-  describe file('/tmp/auditlog.ldif') do
+  describe file('/tmp/auditlog.ldif'), :unless => fact('osfamily').eql?('OpenBSD') do
     it { should be_file }
     its(:content) { should match /^changetype: modify$/ }
     its(:content) { should match /^replace: userPassword$/ }
@@ -255,7 +324,15 @@ describe 'openldap::server' do
     its(:content) { should match /^sambaNTPassword: / }
   end
 
-  describe file('/var/lib/ldap/data/DB_CONFIG') do
+  # Test password modification made it into the audit log
+  describe file('/tmp/auditlog.ldif'), :if => fact('osfamily').eql?('OpenBSD') do
+    it { should be_file }
+    its(:content) { should match /^changetype: modify$/ }
+    its(:content) { should match /^replace: userPassword$/ }
+    its(:content) { should match /^userPassword:: e1NTSEF9/ }
+  end
+
+  describe file("#{data_directory}/data/DB_CONFIG") do
     it { should be_file }
     its(:content) { should eq <<-EOS.gsub(/^ +/, '') }
       set_cachesize 0 2097152 0
@@ -269,14 +346,14 @@ describe 'openldap::server' do
     it { should be_installed }
   end
 
-  describe command("#{db_stat} -m -h /var/lib/ldap/data") do
+  describe command("#{db_stat} -m -h #{data_directory}/data") do
     its(:exit_status) { should eq 0 }
-    its(:stdout) { should match /^2MB (520KB|514KB 24B)\s+Total cache size$/ }
+    its(:stdout) { should match /^2MB (520KB|514KB \d+B)\s+Total cache size$/ }
     its(:stdout) { should match /^1\s+Number of caches$/ }
     its(:stdout) { should match /^1\s+Maximum number of caches$/ }
   end
 
-  describe command("#{db_stat} -c -h /var/lib/ldap/data") do
+  describe command("#{db_stat} -c -h #{data_directory}/data") do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should match /^1500\s+Maximum number of locks possible$/ }
     its(:stdout) { should match /^1500\s+Maximum number of lockers possible$/ }

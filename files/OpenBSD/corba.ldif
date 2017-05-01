@@ -1,0 +1,17 @@
+dn: cn=corba,cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: corba
+olcAttributeTypes: {0}( 1.3.6.1.4.1.42.2.27.4.1.14 NAME 'corbaIor' DESC 'Str
+ ingified interoperable object reference of a CORBA object' EQUALITY caseIgn
+ oreIA5Match SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 SINGLE-VALUE )
+olcAttributeTypes: {1}( 1.3.6.1.4.1.42.2.27.4.1.15 NAME 'corbaRepositoryId' 
+ DESC 'Repository ids of interfaces implemented by a CORBA object' EQUALITY 
+ caseExactMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcObjectClasses: {0}( 1.3.6.1.4.1.42.2.27.4.2.10 NAME 'corbaContainer' DESC
+  'Container for a CORBA object' SUP top STRUCTURAL MUST cn )
+olcObjectClasses: {1}( 1.3.6.1.4.1.42.2.27.4.2.9 NAME 'corbaObject' DESC 'CO
+ RBA object representation' SUP top ABSTRACT MAY ( corbaRepositoryId $ descr
+ iption ) )
+olcObjectClasses: {2}( 1.3.6.1.4.1.42.2.27.4.2.11 NAME 'corbaObjectReference
+ ' DESC 'CORBA interoperable object reference' SUP corbaObject AUXILIARY MUS
+ T corbaIor )

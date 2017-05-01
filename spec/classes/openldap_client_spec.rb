@@ -19,6 +19,9 @@ describe 'openldap::client' do
     end
 
     on_supported_os.each do |os, facts|
+
+      next if os =~ /^openbsd/
+
       context "on #{os}", :compile do
         let(:facts) do
           facts

@@ -34,6 +34,11 @@ describe 'openldap' do
         it { should contain_file('/etc/openldap/ldap.conf') }
         it { should contain_openldap__configuration('/etc/openldap/ldap.conf') }
         it { should contain_package('openldap') }
+      when 'OpenBSD'
+        it { should contain_file('/etc/openldap') }
+        it { should contain_file('/etc/openldap/ldap.conf') }
+        it { should contain_openldap__configuration('/etc/openldap/ldap.conf') }
+        it { should contain_package('openldap-client') }
       end
     end
   end

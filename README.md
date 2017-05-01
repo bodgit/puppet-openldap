@@ -23,7 +23,8 @@ Tested with Travis CI
 This module can install LDAP libraries, client utilities and more importantly
 install and configure the `slapd` ḋaemon to provide directory services.
 
-RHEL/CentOS, Ubuntu and Debian are supported using Puppet 4.4.0 or later.
+RHEL/CentOS, Ubuntu, Debian and OpenBSD are supported using Puppet 4.4.0 or
+later.
 
 ## Setup
 
@@ -111,14 +112,13 @@ probably want out of OpenLDAP; a single database, possibly replicated. This
 is largely due to a number of behaviours and idiosyncrasies of OpenLDAP; the
 order of overlays matters for example.
 
-As alluded to by the [`openldap`](#native-type-openldap) native type, a lot of
-attributes or objects are additive and can't be deleted without manually
-editing the configuration. This module will always try and issue the necessary
-LDIF commands however the server will be "unwilling to perform" them. This
-means that if you try to convert from say a replicating producer back to a
-standalone server you will probably get errors from trying to remove the
-various replication objects. However things should always build from scratch
-cleanly.
+As alluded to by the openldap native type, a lot of attributes or objects are
+additive and can't be deleted without manually editing the configuration. This
+module will always try and issue the necessary LDIF commands however the server
+will sometimes be "unwilling to perform" them. This means that if you try to
+convert from say a replicating producer back to a standalone server you will
+probably get errors from trying to remove the various replication objects.
+However things should always build from scratch cleanly.
 
 This module has been built on and tested against Puppet 4.4.0 and higher.
 
@@ -127,6 +127,7 @@ The module has been tested on:
 * RedHat Enterprise Linux 6/7
 * Ubuntu 14.04/16.04
 * Debian 7/8
+* OpenBSD 6.0
 
 ## Development
 

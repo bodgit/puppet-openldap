@@ -11,15 +11,17 @@ describe 'openldap::client' do
   it 'should work with no errors' do
 
     pp = <<-EOS
-      include ::openldap
-      include ::openldap::client
+      if $::osfamily != 'OpenBSD' {
+        include ::openldap
+        include ::openldap::client
+      }
     EOS
 
     apply_manifest(pp, :catch_failures => true)
     apply_manifest(pp, :catch_changes  => true)
   end
 
-  describe package(package_name) do
+  describe package(package_name), :unless => fact('osfamily').eql?('OpenBSD') do
     it { should be_installed }
   end
 end

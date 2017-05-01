@@ -31,8 +31,37 @@ class openldap::server::install {
         owner   => 0,
         group   => 0,
         mode    => '0644',
-        content => file("openldap/${::osfamily}/slapd.preseed"),
+        content => file("${module_name}/${::osfamily}/slapd.preseed"),
         before  => Package[$package_name],
+      }
+    }
+    'OpenBSD': {
+      $responsefile = undef
+
+      Package[$package_name] -> File["${::openldap::server::conf_dir}/slapd.d"]
+
+      $schemas = [
+        'corba',
+        'core',
+        'cosine',
+        'dyngroup',
+        'inetorgperson',
+        'java',
+        'misc',
+        'nis',
+        'openldap',
+        'ppolicy',
+      ]
+
+      $schemas.each |String $schema| {
+        file { "${::openldap::server::schema_dir}/${schema}.ldif":
+          ensure  => file,
+          owner   => 0,
+          group   => 0,
+          mode    => '0644',
+          content => file("${module_name}/${::osfamily}/${schema}.ldif"),
+          require => Package[$package_name],
+        }
       }
     }
     default: {
@@ -40,24 +69,32 @@ class openldap::server::install {
     }
   }
 
-  group { $group:
-    ensure => present,
-    gid    => $gid,
-    system => true,
-  }
+  case $::osfamily {
+    'OpenBSD': {
+      # noop
+    }
+    default: {
+      group { $group:
+        ensure => present,
+        gid    => $gid,
+        system => true,
+      }
 
-  user { $user:
-    ensure           => present,
-    comment          => $comment,
-    gid              => $group,
-    home             => $::openldap::server::data_directory,
-    password         => $password,
-    password_max_age => $password_max_age,
-    password_min_age => $password_min_age,
-    shell            => $shell,
-    system           => true,
-    uid              => $uid,
-    require          => Group[$group],
+      user { $user:
+        ensure           => present,
+        comment          => $comment,
+        gid              => $group,
+        home             => $::openldap::server::data_directory,
+        password         => $password,
+        password_max_age => $password_max_age,
+        password_min_age => $password_min_age,
+        shell            => $shell,
+        system           => true,
+        uid              => $uid,
+      }
+
+      Exec["find ${::openldap::server::conf_dir}/slapd.d"] -> Package[$package_name]
+    }
   }
 
   # Both RHEL and Debian try by default to create a default database which
@@ -68,6 +105,10 @@ class openldap::server::install {
   # before package installation with the absolute bare minimum configuration
   # allows things to work and is enough to stop the post-install logic in the
   # RHEL package from firing as well
+  #
+  # OpenBSD ships only with the older slapd.conf configuration so also benefits
+  # from the same minimal configuration but can be installed post package
+  # installation
   file { "${::openldap::server::conf_dir}/slapd.d":
     ensure             => directory,
     owner              => $user,
@@ -76,25 +117,21 @@ class openldap::server::install {
     replace            => false,
     recurse            => true,
     source             => "puppet:///modules/openldap/${::osfamily}/slapd.d", # lint:ignore:source_without_rights
-    require            => [
-      User[$user],
-      Group[$group],
-    ],
   }
 
   # Ick, but Puppet can't assign different modes to files and directories. If
   # I set the mode in the above resource, when slapd creates either a file or
   # directory for a new node in the 'cn=config' database it will trigger a
   # change on the next run which IMHO is a bug
-  exec { "find ${::openldap::server::conf_dir}/slapd.d \\( -type f -exec chmod 0600 '{}' ';' \\) -o \\( -type d -exec chmod 0750 '{}' ';' \\)": # lint:ignore:140chars
+  exec { "find ${::openldap::server::conf_dir}/slapd.d":
+    command => "find ${::openldap::server::conf_dir}/slapd.d \\( -type f -exec chmod 0600 '{}' ';' \\) -o \\( -type d -exec chmod 0750 '{}' ';' \\)", # lint:ignore:140chars
     path    => $::path,
     onlyif  => "find ${::openldap::server::conf_dir}/slapd.d \\( -type f -a \\! -perm 0600 \\) -o \\( -type d -a \\! -perm 0750 \\) | grep -q .", # lint:ignore:140chars
     require => File["${::openldap::server::conf_dir}/slapd.d"],
-    before  => Package[$package_name],
   }
 
-  package { $::openldap::server::package_name:
-    ensure       => present,
+  package { $package_name:
+    ensure       => $::openldap::server::package_ensure,
     responsefile => $responsefile,
   }
 }

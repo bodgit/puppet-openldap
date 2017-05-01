@@ -1,18 +1,15 @@
 # @!visibility private
 class openldap::server::config {
 
-  $backend_modules   = $::openldap::server::backend_modules
-  $data_directory    = $::openldap::server::data_directory
-  $db_backend        = $::openldap::server::db_backend
-  $group             = $::openldap::server::group
-  $interfaces        = $::openldap::server::interfaces
-  $module_extension  = $::openldap::server::module_extension
-  $overlay_packages  = $::openldap::server::overlay_packages
-  $password_hash     = $::openldap::server::password_hash
-  $password_modules  = $::openldap::server::password_modules
-  $password_packages = $::openldap::server::password_packages
-  $replica_dn        = $::openldap::server::replica_dn
-  $user              = $::openldap::server::user
+  $backend_modules  = $::openldap::server::backend_modules
+  $data_directory   = $::openldap::server::data_directory
+  $db_backend       = $::openldap::server::db_backend
+  $group            = $::openldap::server::group
+  $interfaces       = $::openldap::server::interfaces
+  $module_extension = $::openldap::server::module_extension
+  $password_hash    = $::openldap::server::password_hash
+  $replica_dn       = $::openldap::server::replica_dn
+  $user             = $::openldap::server::user
 
   file { $data_directory:
     ensure       => directory,
@@ -22,10 +19,6 @@ class openldap::server::config {
     purge        => true,
     recurse      => true,
     recurselimit => 1,
-    require      => [
-      User[$user],
-      Group[$group],
-    ],
   }
 
   case $::osfamily {
@@ -125,14 +118,17 @@ class openldap::server::config {
   # }
   $overlay_index = hash(flatten(zip($overlays, openldap::values($overlays))))
 
+  $overlay_modules = $overlays.filter |String $x| { member($::openldap::server::overlay_modules, $x) }
+  $overlay_packages = unique(delete_undef_values($overlay_modules.map |String $x| { $::openldap::server::overlay_packages[$x] }))
+
   if $password_hash {
     # Generate a unique list of modules needed to satisfy the chosen password
     # hashes and subsequently a unique list of packages needed to be installed
-    $_password_modules  = unique(delete_undef_values($password_hash.map |String $x| { $password_modules[$x] }))
-    $_password_packages = unique(delete_undef_values($_password_modules.map |String $x| { $password_packages[$x] }))
+    $password_modules  = unique(delete_undef_values($password_hash.map |String $x| { $::openldap::server::password_modules[$x] }))
+    $password_packages = unique(delete_undef_values($password_modules.map |String $x| { $::openldap::server::password_packages[$x] }))
   } else {
-    $_password_modules  = []
-    $_password_packages = []
+    $password_modules  = []
+    $password_packages = []
   }
 
   $modules = flatten([delete_undef_values([
@@ -152,22 +148,32 @@ class openldap::server::config {
       },
       default => undef,
     },
-  ]), $overlays, $_password_modules])
+  ]), $overlay_modules, $password_modules])
 
   # Convert ['module1', 'module2'] into ['{0}module1.la', '{1}module2.la']
   $module_load = suffix(openldap::values($modules), $module_extension)
 
-  openldap { 'cn=module{0},cn=config':
-    ensure     => present,
-    attributes => {
-      'cn'            => 'module{0}',
-      'objectClass'   => 'olcModuleList',
-      'olcModuleLoad' => $module_load,
-    },
+  # Either no modules to load or dynamic modules aren't supported
+  if size($modules) > 0 {
+    openldap { 'cn=module{0},cn=config':
+      ensure     => present,
+      attributes => {
+        'cn'            => 'module{0}',
+        'objectClass'   => 'olcModuleList',
+        'olcModuleLoad' => $module_load,
+      },
+    }
   }
 
-  if size($_password_packages) > 0 {
-    package { $_password_packages:
+  if size($password_packages) > 0 {
+    package { $password_packages:
+      ensure => present,
+      before => Openldap['cn=module{0},cn=config'],
+    }
+  }
+
+  if size($overlay_packages) > 0 {
+    package { $overlay_packages:
       ensure => present,
       before => Openldap['cn=module{0},cn=config'],
     }
@@ -211,7 +217,10 @@ class openldap::server::config {
         'olcOverlay'          => '{0}chain',
         'olcChainReturnError' => openldap::boolean($::openldap::server::chain_return_error),
       }),
-      require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    if size($modules) > 0 {
+      Openldap['cn=module{0},cn=config'] -> Openldap['olcOverlay={0}chain,olcDatabase={-1}frontend,cn=config']
     }
 
     $::openldap::server::update_ref.each |Integer $i, Bodgitlib::LDAP::URI::Simple $uri| {
@@ -250,7 +259,10 @@ class openldap::server::config {
       'olcAccess'   => '{0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read by * none',
       'olcDatabase' => '{1}monitor',
     },
-    require    => Openldap['cn=module{0},cn=config'],
+  }
+
+  if size($modules) > 0 {
+    Openldap['cn=module{0},cn=config'] -> Openldap['olcDatabase={1}monitor,cn=config']
   }
 
   # Assume foo backend uses olcFooConfig class, works for *db at least
@@ -329,7 +341,6 @@ class openldap::server::config {
           'olcRootDN'         => $::openldap::server::root_dn,
           'olcSuffix'         => 'cn=log',
         }),
-        require    => Openldap['cn=module{0},cn=config'],
       }
 
       openldap { "olcOverlay={0}syncprov,olcDatabase={2}${db_backend},cn=config":
@@ -345,7 +356,11 @@ class openldap::server::config {
           'olcSpReloadHint' => openldap::boolean(true),
           'olcSpSessionlog' => $::openldap::server::syncprov_sessionlog,
         }),
-        require    => Openldap['cn=module{0},cn=config'],
+      }
+
+      if size($modules) > 0 {
+        Openldap['cn=module{0},cn=config'] -> Openldap["olcDatabase={2}${db_backend},cn=config"]
+        Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay={0}syncprov,olcDatabase={2}${db_backend},cn=config"]
       }
 
       # The main database is now shuffled along by one
@@ -403,7 +418,10 @@ class openldap::server::config {
       'olcSyncrepl'       => openldap::values(openldap::flatten_syncrepl($::openldap::server::syncrepl)),
       'olcUpdateRef'      => $::openldap::server::update_ref,
     }),
-    require    => Openldap['cn=module{0},cn=config'],
+  }
+
+  if size($modules) > 0 {
+    Openldap['cn=module{0},cn=config'] -> Openldap["olcDatabase={${db_index}}${db_backend},cn=config"]
   }
 
   if $::openldap::server::syncprov {
@@ -419,7 +437,10 @@ class openldap::server::config {
         'olcSpReloadHint' => openldap::boolean(true),
         'olcSpSessionlog' => $::openldap::server::syncprov_sessionlog,
       }),
-      require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    if size($modules) > 0 {
+      Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['syncprov']},olcDatabase={${db_index}}${db_backend},cn=config"]
     }
 
     if $::openldap::server::accesslog {
@@ -436,7 +457,10 @@ class openldap::server::config {
           'olcAccessLogSuccess' => openldap::boolean(true),
           'olcAccessLogPurge'   => '07+00:00 01+00:00',
         }),
-        require    => Openldap['cn=module{0},cn=config'],
+      }
+
+      if size($modules) > 0 {
+        Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['accesslog']},olcDatabase={${db_index}}${db_backend},cn=config"]
       }
     }
   }
@@ -452,20 +476,14 @@ class openldap::server::config {
         'olcOverlay'      => $overlay_index['auditlog'],
         'olcAuditlogFile' => $::openldap::server::auditlog_file,
       }),
-      require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    if size($modules) > 0 {
+      Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['auditlog']},olcDatabase={${db_index}}${db_backend},cn=config"]
     }
   }
 
   if $::openldap::server::smbk5pwd {
-
-    # Install the package before we try and load the module
-    if has_key($overlay_packages, 'smbk5pwd') {
-      package { $overlay_packages['smbk5pwd']:
-        ensure => present,
-        before => Openldap['cn=module{0},cn=config'],
-      }
-    }
-
     openldap { "olcOverlay=${overlay_index['smbk5pwd']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
@@ -477,12 +495,15 @@ class openldap::server::config {
         'olcSmbK5PwdEnable'     => $::openldap::server::smbk5pwd_backends,
         'olcSmbK5PwdMustChange' => $::openldap::server::smbk5pwd_must_change,
       }),
-      require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    if size($modules) > 0 {
+      Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['smbk5pwd']},olcDatabase={${db_index}}${db_backend},cn=config"]
     }
   }
 
   if $::openldap::server::unique {
-    openldap {"olcOverlay=${overlay_index['unique']},olcDatabase={${db_index}}${db_backend},cn=config":
+    openldap { "olcOverlay=${overlay_index['unique']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
         'objectClass'  => [
@@ -492,11 +513,19 @@ class openldap::server::config {
         'olcOverlay'   => $overlay_index['unique'],
         'olcUniqueURI' => openldap::flatten_unique($::openldap::server::unique_uri),
       }),
-      require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    if size($modules) > 0 {
+      Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['unique']},olcDatabase={${db_index}}${db_backend},cn=config"]
     }
   }
 
   if $::openldap::server::ppolicy {
+    openldap_schema { 'ppolicy':
+      ensure => present,
+      ldif   => "${::openldap::server::schema_dir}/ppolicy.ldif",
+    }
+
     openldap { "olcOverlay=${overlay_index['ppolicy']},olcDatabase={${db_index}}${db_backend},cn=config":
       ensure     => present,
       attributes => delete_undef_values({
@@ -510,7 +539,10 @@ class openldap::server::config {
         'olcPPolicyUseLockout'     => openldap::boolean($::openldap::server::ppolicy_use_lockout),
         'olcPPolicyForwardUpdates' => openldap::boolean($::openldap::server::ppolicy_forward_updates),
       }),
-      require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    if size($modules) > 0 {
+      Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['ppolicy']},olcDatabase={${db_index}}${db_backend},cn=config"]
     }
   }
 
@@ -523,7 +555,10 @@ class openldap::server::config {
         ],
         'olcOverlay'  => $overlay_index['memberof'],
       }),
-      require    => Openldap['cn=module{0},cn=config'],
+    }
+
+    if size($modules) > 0 {
+      Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['memberof']},olcDatabase={${db_index}}${db_backend},cn=config"]
     }
   }
 }

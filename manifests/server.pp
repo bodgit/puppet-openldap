@@ -235,8 +235,11 @@
 # @param memberof Setting this to `true` enables the memberOf overlay. See the
 #   entry in `slapo-memberof(5)` man page for more details.
 # @param module_extension The extension module files have, normally `.la`.
+# @param overlay_modules A list of overlays by name that are modules.
 # @param overlay_packages A hash keyed by overlay name with the package name
 #   that provides it as the value.
+# @param package_ensure The standard package `ensure` parameter, usually
+#   `present`.
 # @param package_name The name of the package to install that provides the LDAP
 #   `slapd` daemon.
 # @param password_crypt_salt_format The format of the salt for hashing user
@@ -273,8 +276,8 @@
 # @param pid_file Where `slapd` writes out its PID.
 # @param ppolicy Setting this to `true` will enable the `ppolicy` overlay on
 #   the main database allowing the enforcement of password strength/complexity
-#   as well as account lockout. You will need to ensure the `ppolicy` schema is
-#   loaded before you try and create or load any policies.
+#   as well as account lockout. The `ppolicy` schema will be loaded
+#   automatically.
 # @param ppolicy_default A Distinguished Name of the default password policy
 #   object to use if a user does not have a `pwdPolicySubEntry` attribute. This
 #   must exist under the main suffix.
@@ -384,7 +387,9 @@ class openldap::server (
   Optional[Array[OpenLDAP::LogLevel, 1]]              $log_level                  = undef,
   String                                              $module_extension           = $::openldap::params::module_extension,
   Boolean                                             $memberof                   = false,
+  Array[OpenLDAP::Overlay]                            $overlay_modules            = $::openldap::params::overlay_modules,
   Hash[OpenLDAP::Overlay, String]                     $overlay_packages           = $::openldap::params::overlay_packages,
+  String                                              $package_ensure             = $::openldap::params::server_package_ensure,
   String                                              $package_name               = $::openldap::params::server_package_name,
   Optional[String]                                    $password_crypt_salt_format = undef,
   Optional[Array[OpenLDAP::PasswordHash, 1]]          $password_hash              = undef,
