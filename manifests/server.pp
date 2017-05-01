@@ -165,6 +165,8 @@
 # @param accesslog_dn_cachesize Specify the size of the in-memory DN cache
 #   maintained by the `bdb` or `hdb` backends for the database used by the
 #   `accesslog` overlay. See the `olcDbDNcacheSize` attribute.
+# @param accesslog_envflags An array of flags for configuring the LMDB library
+#   used by the `mdb` backend.
 # @param accesslog_index_cachesize Specify the size of the in-memory index
 #   cache maintained by the `bdb` or `hdb` backends for the database used by
 #   the `accesslog` overlay. See the `olcDbIDLcacheSize` attribute.
@@ -210,6 +212,8 @@
 # @param data_dn_cachesize Specify the size of the in-memory index cache
 #   maintained by the `bdb` or `hdb` backends for the main database. See the
 #   `olcDbDNcacheSize` attribute.
+# @param data_envflags An array of flags for configuring the LMDB library used
+#   by the `mdb` backend.
 # @param data_index_cachesize Specify the size of the in-memory index cache
 #   maintained by the `bdb` or `hdb` backends for the main database. See the
 #   `olcDbIDLcacheSize` attribute.
@@ -366,6 +370,7 @@ class openldap::server (
   Optional[OpenLDAP::Checkpoint]                      $accesslog_checkpoint       = undef,
   Optional[Array[String, 1]]                          $accesslog_db_config        = undef,
   Optional[Integer[0]]                                $accesslog_dn_cachesize     = undef,
+  Optional[Array[String, 1]]                          $accesslog_envflags         = undef,
   Optional[Integer[0]]                                $accesslog_index_cachesize  = undef,
   Stdlib::Absolutepath                                $args_file                  = $::openldap::params::args_file,
   Boolean                                             $auditlog                   = false,
@@ -383,6 +388,7 @@ class openldap::server (
   Optional[Array[String, 1]]                          $data_db_config             = undef,
   Stdlib::Absolutepath                                $data_directory             = $::openldap::params::data_directory,
   Optional[Integer[0]]                                $data_dn_cachesize          = undef,
+  Optional[Array[String, 1]]                          $data_envflags              = undef,
   Optional[Integer[0]]                                $data_index_cachesize       = undef,
   OpenLDAP::Backend                                   $db_backend                 = $::openldap::params::db_backend,
   String                                              $group                      = $::openldap::params::group,

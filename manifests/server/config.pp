@@ -323,6 +323,26 @@ class openldap::server::config {
         mode   => '0600',
       }
 
+      case $db_backend {
+        'bdb', 'hdb': {
+          $accesslog_cachesize       = $::openldap::server::accesslog_cachesize
+          $accesslog_db_config       = $::openldap::server::accesslog_db_config
+          $accesslog_dn_cachesize    = $::openldap::server::accesslog_dn_cachesize
+          $accesslog_envflags        = undef
+          $accesslog_index_cachesize = $::openldap::server::accesslog_index_cachesize
+        }
+        'mdb': {
+          $accesslog_cachesize       = undef
+          $accesslog_db_config       = undef
+          $accesslog_dn_cachesize    = undef
+          $accesslog_envflags        = $::openldap::server::accesslog_envflags
+          $accesslog_index_cachesize = undef
+        }
+        default: {
+          # noop
+        }
+      }
+
       openldap { "olcDatabase={2}${db_backend},cn=config":
         ensure     => present,
         attributes => delete_undef_values({
@@ -332,12 +352,13 @@ class openldap::server::config {
           ],
           'olcAccess'         => openldap::values($replica_access),
           'olcDatabase'       => "{2}${db_backend}",
-          'olcDbCacheSize'    => $::openldap::server::accesslog_cachesize,
+          'olcDbCacheSize'    => $accesslog_cachesize,
           'olcDbCheckpoint'   => openldap::flatten_checkpoint($::openldap::server::accesslog_checkpoint),
-          'olcDbConfig'       => openldap::values($::openldap::server::accesslog_db_config),
+          'olcDbConfig'       => openldap::values($accesslog_db_config),
           'olcDbDirectory'    => "${data_directory}/log",
-          'olcDbDNcacheSize'  => $::openldap::server::accesslog_dn_cachesize,
-          'olcDbIDLcacheSize' => $::openldap::server::accesslog_index_cachesize,
+          'olcDbDNcacheSize'  => $accesslog_dn_cachesize,
+          'olcDbEnvFlags'     => $accesslog_envflags,
+          'olcDbIDLcacheSize' => $accesslog_index_cachesize,
           'olcDbIndex'        => [
             'entryCSN,objectClass,reqEnd,reqResult,reqStart eq',
           ],
@@ -398,6 +419,26 @@ class openldap::server::config {
     mode   => '0600',
   }
 
+  case $db_backend {
+    'bdb', 'hdb': {
+      $data_cachesize       = $::openldap::server::data_cachesize
+      $data_db_config       = $::openldap::server::data_db_config
+      $data_dn_cachesize    = $::openldap::server::data_dn_cachesize
+      $data_envflags        = undef
+      $data_index_cachesize = $::openldap::server::data_index_cachesize
+    }
+    'mdb': {
+      $data_cachesize       = undef
+      $data_db_config       = undef
+      $data_dn_cachesize    = undef
+      $data_envflags        = $::openldap::server::data_envflags
+      $data_index_cachesize = undef
+    }
+    default: {
+      # noop
+    }
+  }
+
   openldap { "olcDatabase={${db_index}}${db_backend},cn=config":
     ensure     => present,
     attributes => delete_undef_values({
@@ -407,12 +448,13 @@ class openldap::server::config {
       ],
       'olcAccess'         => openldap::values($access),
       'olcDatabase'       => "{${db_index}}${db_backend}",
-      'olcDbCacheSize'    => $::openldap::server::data_cachesize,
+      'olcDbCacheSize'    => $data_cachesize,
       'olcDbCheckpoint'   => openldap::flatten_checkpoint($::openldap::server::data_checkpoint),
-      'olcDbConfig'       => openldap::values($::openldap::server::data_db_config),
+      'olcDbConfig'       => openldap::values($data_db_config),
       'olcDbDirectory'    => "${data_directory}/data",
-      'olcDbDNcacheSize'  => $::openldap::server::data_dn_cachesize,
-      'olcDbIDLcacheSize' => $::openldap::server::data_index_cachesize,
+      'olcDbDNcacheSize'  => $data_dn_cachesize,
+      'olcDbEnvFlags'     => $data_envflags,
+      'olcDbIDLcacheSize' => $data_index_cachesize,
       'olcDbIndex'        => openldap::flatten_indices($indices),
       'olcLimits'         => openldap::values(openldap::flatten_limits($limits)),
       'olcRootDN'         => $::openldap::server::root_dn,
