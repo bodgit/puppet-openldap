@@ -106,6 +106,10 @@ class openldap::server::config {
       true    => 'memberof',
       default => undef,
     },
+    $::openldap::server::refint ? {
+      true    => 'refint',
+      default => undef,
+    },
   ])
 
   # Creates a hash based on the enabled overlays pointing to their intended
@@ -559,6 +563,25 @@ class openldap::server::config {
 
     if size($modules) > 0 {
       Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['memberof']},olcDatabase={${db_index}}${db_backend},cn=config"]
+    }
+  }
+
+  if $::openldap::server::refint {
+    openldap { "olcOverlay=${overlay_index['refint']},olcDatabase={${db_index}}${db_backend},cn=config":
+      ensure     => present,
+      attributes => delete_undef_values({
+        'objectClass'         => [
+          'olcOverlayConfig',
+          'olcRefintConfig',
+        ],
+        'olcOverlay'          => $overlay_index['refint'],
+        'olcRefintAttributes' => join($::openldap::server::refint_attributes, ' '),
+        'olcRefintNothing'    => $::openldap::server::refint_nothing,
+      }),
+    }
+
+    if size($modules) > 0 {
+      Openldap['cn=module{0},cn=config'] -> Openldap["olcOverlay=${overlay_index['refint']},olcDatabase={${db_index}}${db_backend},cn=config"]
     }
   }
 }

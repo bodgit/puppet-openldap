@@ -290,6 +290,12 @@
 #   not necessary if the Password Modify extended operation is normally used.
 # @param ppolicy_use_lockout Setting this to `true` makes a bind to a locked
 #   account return an `AccountLocked` error instead of `InvalidCredentials`.
+# @param refint Setting this to `true` will enable the `refint` overlay on the
+#   main database allowing referential integrity on attribute values.
+# @param refint_attributes Array of attributes for which integrity will be
+#   maintained.
+# @param refint_nothing Arbitrary value to be used as a placeholder when the
+#   last value would otherwise be deleted.
 # @param replica_dn The Distinguished Names used by consumer/slave servers to
 #   connect to this server in order to replicate content.
 # @param schema_dir The base directory used to store the schemas shipped with
@@ -401,6 +407,9 @@ class openldap::server (
   Optional[Boolean]                                   $ppolicy_forward_updates    = undef,
   Optional[Boolean]                                   $ppolicy_hash_cleartext     = undef,
   Optional[Boolean]                                   $ppolicy_use_lockout        = undef,
+  Boolean                                             $refint                     = false,
+  Optional[Array[String, 1]]                          $refint_attributes          = undef,
+  Optional[Bodgitlib::LDAP::DN]                       $refint_nothing             = undef,
   Optional[Array[Bodgitlib::LDAP::DN, 1]]             $replica_dn                 = undef,
   Stdlib::Absolutepath                                $schema_dir                 = $::openldap::params::schema_dir,
   Optional[OpenLDAP::Security]                        $security                   = undef,
@@ -436,6 +445,10 @@ class openldap::server (
 
   if $chain and ! $update_ref {
     fail('Chain overlay requires an update referral URL')
+  }
+
+  if $refint and ! $refint_attributes {
+    fail('Referential Integrity overlay requires attributes')
   }
 
   if $syncprov and ! $replica_dn {
