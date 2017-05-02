@@ -20,7 +20,9 @@ describe 'openldap::server::schema' do
         let(:pre_condition) do
           <<-EOF
             include ::openldap
-            include ::openldap::client
+            if $::osfamily != 'OpenBSD' {
+              include ::openldap::client
+            }
             class { '::openldap::server':
               root_dn       => 'cn=Manager,dc=example,dc=com',
               root_password => 'secret',
