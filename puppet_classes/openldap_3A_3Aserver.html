@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Puppet Class: openldap::server
+  
+    &mdash; Documentation by YARD 0.9.8
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  pathId = "puppet_classes::openldap::server";
+  relpath = '../';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="../puppet_class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="../_index.html">Index (o)</a> &raquo;
+    <span class='title'><span class='object_link'>Puppet Classes</span></span>
+     &raquo; 
+    <span class="title">openldap::server</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="puppet_class_list_link"
+        href="../puppet_class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Puppet Class: openldap::server</h1>
+<div class="box_info">
+  
+  <dl>
+    <dt>Inherits:</dt>
+    <dd>::openldap::params</dd>
+  </dl>
+  
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>
+      manifests/server.pp
+    </dd>
+  </dl>
+</div>
+
+<h2>Overview</h2>
+<div class="docstring">
+  <div class="discussion">
+    
+<p>Installs and manages the OpenLDAP server.</p>
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <p class="tag_title">Examples:</p>
+    
+      
+        <p class="example_title"><div class='inline'>
+<p>Create a standalone directory server listening on the standard LDAP TCP
+port 389 that disallows anonymous reads and allows users to update their
+own object</p>
+</div></p>
+      
+      <pre class="example code"><code>include ::openldap
+include ::openldap::client
+
+class { &#39;::openldap::server&#39;:
+  root_dn       =&gt; &#39;cn=Manager,dc=example,dc=com&#39;,
+  root_password =&gt; &#39;{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY&#39;,
+  suffix        =&gt; &#39;dc=example,dc=com&#39;,
+  access        =&gt; [
+    &#39;to attrs=userPassword by self =xw by anonymous auth&#39;,
+    &#39;to * by dn.base=&quot;gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth&quot; manage by self write by users read&#39;,
+  ],
+  indices       =&gt; [
+    [[&#39;objectClass&#39;], [&#39;eq&#39;, &#39;pres&#39;]],
+    [[&#39;ou&#39;, &#39;cn&#39;, &#39;mail&#39;, &#39;surname&#39;, &#39;givenname&#39;], [&#39;eq&#39;, &#39;pres&#39;, &#39;sub&#39;]],
+  ],
+  interfaces    =&gt; [&quot;ldap://${::ipaddress}/&quot;],
+}
+::openldap::server::schema { &#39;cosine&#39;:
+  ensure =&gt; present,
+}
+::openldap::server::schema { &#39;inetorgperson&#39;:
+  ensure =&gt; present,
+}
+::openldap::server::schema { &#39;nis&#39;:
+  ensure  =&gt; present,
+  require =&gt; ::Openldap::Server::Schema[&#39;cosine&#39;],
+}</code></pre>
+    
+      
+        <p class="example_title"><div class='inline'>
+<p>Extend the above example to become a producer/master server for a number of
+consumer/slave servers</p>
+</div></p>
+      
+      <pre class="example code"><code>include ::openldap
+include ::openldap::client
+
+class { &#39;::openldap::server&#39;:
+  root_dn       =&gt; &#39;cn=Manager,dc=example,dc=com&#39;,
+  root_password =&gt; &#39;{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY&#39;,
+  suffix        =&gt; &#39;dc=example,dc=com&#39;,
+  access        =&gt; [
+    &#39;to attrs=userPassword by self =xw by anonymous auth&#39;,
+    &#39;to * by dn.base=&quot;gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth&quot; manage by self write by users read&#39;,
+  ],
+  indices       =&gt; [
+    [[&#39;objectClass&#39;], [&#39;eq&#39;, &#39;pres&#39;]],
+    [[&#39;ou&#39;, &#39;cn&#39;, &#39;mail&#39;, &#39;surname&#39;, &#39;givenname&#39;], [&#39;eq&#39;, &#39;pres&#39;, &#39;sub&#39;]],
+  ],
+  interfaces    =&gt; [&quot;ldap://${::ipaddress}/&quot;],
+  replica_dn    =&gt; [&#39;cn=replicator,dc=example,dc=com&#39;],
+  syncprov      =&gt; true,
+}
+::openldap::server::schema { &#39;cosine&#39;:
+  ensure =&gt; present,
+}
+::openldap::server::schema { &#39;inetorgperson&#39;:
+  ensure =&gt; present,
+}
+::openldap::server::schema { &#39;nis&#39;:
+  ensure  =&gt; present,
+  require =&gt; ::Openldap::Server::Schema[&#39;cosine&#39;],
+}</code></pre>
+    
+      
+        <p class="example_title"><div class='inline'>
+<p>Extend this further to also enable delta replication</p>
+</div></p>
+      
+      <pre class="example code"><code>include ::openldap
+include ::openldap::client
+
+class { &#39;::openldap::server&#39;:
+  root_dn       =&gt; &#39;cn=Manager,dc=example,dc=com&#39;,
+  root_password =&gt; &#39;{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY&#39;,
+  suffix        =&gt; &#39;dc=example,dc=com&#39;,
+  access        =&gt; [
+    &#39;to attrs=userPassword by self =xw by anonymous auth&#39;,
+    &#39;to * by dn.base=&quot;gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth&quot; manage by self write by users read&#39;,
+  ],
+  accesslog     =&gt; true,
+  indices       =&gt; [
+    [[&#39;objectClass&#39;], [&#39;eq&#39;, &#39;pres&#39;]],
+    [[&#39;ou&#39;, &#39;cn&#39;, &#39;mail&#39;, &#39;surname&#39;, &#39;givenname&#39;], [&#39;eq&#39;, &#39;pres&#39;, &#39;sub&#39;]],
+  ],
+  interfaces    =&gt; [&quot;ldap://${::ipaddress}/&quot;],
+  replica_dn    =&gt; [&#39;cn=replicator,dc=example,dc=com&#39;],
+  syncprov      =&gt; true,
+}
+::openldap::server::schema { &#39;cosine&#39;:
+  ensure =&gt; present,
+}
+::openldap::server::schema { &#39;inetorgperson&#39;:
+  ensure =&gt; present,
+}
+::openldap::server::schema { &#39;nis&#39;:
+  ensure  =&gt; present,
+  require =&gt; ::Openldap::Server::Schema[&#39;cosine&#39;],
+}</code></pre>
+    
+      
+        <p class="example_title"><div class='inline'>
+<p>Create a server acting as a consumer of another server using delta
+replication and pass back a referral to clients on attempting to write</p>
+</div></p>
+      
+      <pre class="example code"><code>include ::openldap
+include ::openldap::client
+
+class { &#39;::openldap::server&#39;:
+  root_dn       =&gt; &#39;cn=Manager,dc=example,dc=com&#39;,
+  root_password =&gt; &#39;{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY&#39;,
+  suffix        =&gt; &#39;dc=example,dc=com&#39;,
+  access        =&gt; [
+    &#39;to attrs=userPassword by self =xw by anonymous auth&#39;,
+    &#39;to * by dn.base=&quot;gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth&quot; manage by self write by users read&#39;,
+  ],
+  indices       =&gt; [
+    [[&#39;objectClass&#39;], [&#39;eq&#39;, &#39;pres&#39;]],
+    [[&#39;ou&#39;, &#39;cn&#39;, &#39;mail&#39;, &#39;surname&#39;, &#39;givenname&#39;], [&#39;eq&#39;, &#39;pres&#39;, &#39;sub&#39;]],
+  ],
+  interfaces    =&gt; [&quot;ldap://${::ipaddress}/&quot;],
+  syncrepl      =&gt; [
+    {
+      &#39;rid&#39;            =&gt; 1,
+      &#39;provider&#39;       =&gt; &#39;ldap://ldap.example.com/&#39;,
+      &#39;searchbase&#39;     =&gt; &#39;dc=example,dc=com&#39;,
+      &#39;bindmethod&#39;     =&gt; &#39;simple&#39;,
+      &#39;binddn&#39;         =&gt; &#39;cn=replicator,dc=example,dc=com&#39;,
+      &#39;credentials&#39;    =&gt; &#39;secret&#39;,
+      &#39;logbase&#39;        =&gt; &#39;cn=log&#39;,
+      &#39;logfilter&#39;      =&gt; &#39;(&amp;(objectClass=auditWriteObject)(reqResult=0))&#39;,
+      &#39;schemachecking&#39; =&gt; true,
+      &#39;type&#39;           =&gt; &#39;refreshAndPersist&#39;,
+      &#39;retry&#39;          =&gt; [[60, &#39;+&#39;]],
+      &#39;syncdata&#39;       =&gt; &#39;accesslog&#39;,
+    },
+  ],
+  update_ref    =&gt; [&#39;ldap://ldap.example.com/&#39;],
+}
+::openldap::server::schema { &#39;cosine&#39;:
+  ensure =&gt; present,
+}
+::openldap::server::schema { &#39;inetorgperson&#39;:
+  ensure =&gt; present,
+}
+::openldap::server::schema { &#39;nis&#39;:
+  ensure  =&gt; present,
+  require =&gt; ::Openldap::Server::Schema[&#39;cosine&#39;],
+}</code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>root_dn</span>
+      
+      
+        <span class='type'>(<tt>Bodgitlib::LDAP::DN</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The Root Distinguished Name used to administer the database.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>root_password</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The password for the Root Distinguished Name.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>suffix</span>
+      
+      
+        <span class='type'>(<tt>Bodgitlib::LDAP::DN</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The suffix for the main database.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>access</span>
+      
+      
+        <span class='type'>(<tt>Array[String, 1]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::access</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of ACLs to apply to the database, in the same form as the
+<code>olcAccess</code> attribute.</p>
+
+<p>Do not include an ACL for the DN used by replication, one is added
+automatically when the <code>syncprov</code> parameter is used.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>accesslog</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> will enable the <code>accesslog</code>
+overlay in conjunction with the <code>syncprov</code> overlay to enable
+delta replication.</p>
+
+<p>It will create a separate database with the suffix <code>cn=log</code> and
+use the value of the <code>replica_dn</code> parameter much like the
+<code>syncprov</code> setting to allow it to be accessed by consumers.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>accesslog_cachesize</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the size of the in-memory entry cache maintained by the
+<code>bdb</code> or <code>hdb</code> backends for the database used by the
+<code>accesslog</code> overlay. See the <code>olcDbCacheSize</code>
+attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>accesslog_checkpoint</span>
+      
+      
+        <span class='type'>(<tt>Optional[OpenLDAP::Checkpoint]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the frequency for checkpointing the transaction log of the database
+used by the <code>accesslog</code> overlay. This is specified in the same
+form as the <code>olcDbCheckpoint</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>accesslog_db_config</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[String, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of lines in the same form as the <code>olcDbConfig</code>
+attribute to tune the database used by the <code>accesslog</code> overlay.
+This results in creating a <code>DB_CONFIG</code> file for the database if
+the backend is either <code>bdb</code> or <code>hdb</code>.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>accesslog_dn_cachesize</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the size of the in-memory DN cache maintained by the
+<code>bdb</code> or <code>hdb</code> backends for the database used by the
+<code>accesslog</code> overlay. See the <code>olcDbDNcacheSize</code>
+attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>accesslog_envflags</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[String, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of flags for configuring the LMDB library used by the
+<code>mdb</code> backend.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>accesslog_index_cachesize</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the size of the in-memory index cache maintained by the
+<code>bdb</code> or <code>hdb</code> backends for the database used by the
+<code>accesslog</code> overlay. See the <code>olcDbIDLcacheSize</code>
+attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args_file</span>
+      
+      
+        <span class='type'>(<tt>Stdlib::Absolutepath</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::args_file</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Where <code>slapd</code> writes out its command-line arguments.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>auditlog</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> will enable the <code>auditlog</code>
+overlay.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>auditlog_file</span>
+      
+      
+        <span class='type'>(<tt>Optional[Stdlib::Absolutepath]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The LDIF file where the <code>auditlog</code> overlay writes any changes.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>authz_policy</span>
+      
+      
+        <span class='type'>(<tt>Optional[Enum['none', 'from', 'to', 'any', 'all']]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcAuthzPolicy</code> attribute, accepts one of
+<code>none</code>, <code>from</code>, <code>to</code>, <code>any</code>, or
+<code>all</code>.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>backend_modules</span>
+      
+      
+        <span class='type'>(<tt>Array[OpenLDAP::Backend]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::backend_modules</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of database backends that are built as modules and therefore
+require loading before use. The backend names are listed without the
+<code>back_</code> prefix and any extension that the module filename might
+have.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>backend_packages</span>
+      
+      
+        <span class='type'>(<tt>Hash[OpenLDAP::Backend, String]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::backend_packages</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>A hash keyed by database backend with the package name that provides it as
+the value. As with <code>backend_modules</code> the backend is used without
+any <code>back_</code> prefix and any extension that the module filename
+might have.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>chain</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> enables the <code>chain</code> overlay
+which transparently forwards writes to a slave/consumer on behalf of the
+client to the master/producer indicated by the configured update referral
+URI.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>chain_id_assert_bind</span>
+      
+      
+        <span class='type'>(<tt>Optional[OpenLDAP::LDAP::IDAssertBind]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcDbIDAssertBind</code> attribute on the LDAP database
+used by the chain overlay.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>chain_rebind_as_user</span>
+      
+      
+        <span class='type'>(<tt>Optional[Boolean]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcDbRebindAsUser</code> attribute on the LDAP database
+used by the chain overlay.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>chain_return_error</span>
+      
+      
+        <span class='type'>(<tt>Optional[Boolean]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcChainReturnError</code> attribute on the chain
+overlay.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>chain_tls</span>
+      
+      
+        <span class='type'>(<tt>Optional[OpenLDAP::LDAP::TLS]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcDbStartTLS</code> attribute on the LDAP database used
+by the chain overlay. See the <code>tls</code> entry in the
+<code>slapd-ldap</code> man page for more information on usage and accepted
+values.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>data_cachesize</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the size of the in-memory entry cache maintained by the
+<code>bdb</code> or <code>hdb</code> backends for the main database. See
+the <code>olcDbCacheSize</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>data_checkpoint</span>
+      
+      
+        <span class='type'>(<tt>Optional[OpenLDAP::Checkpoint]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the frequency for checkpointing the transaction log of the main
+database. This is specified in the same form as the
+<code>olcDbCheckpoint</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>data_db_config</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[String, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of lines in the same form as the <code>olcDbConfig</code>
+attribute to tune the main database. This results in creating a
+<code>DB_CONFIG</code> file for the database if the backend is either
+<code>bdb</code> or <code>hdb</code>.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>data_directory</span>
+      
+      
+        <span class='type'>(<tt>Stdlib::Absolutepath</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::data_directory</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The base directory used for database storage. Rather than store one
+database at the top level, this module creates a sub-directory
+per-database. Any unmanaged files in the top-level directory will be
+purged.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>data_dn_cachesize</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the size of the in-memory index cache maintained by the
+<code>bdb</code> or <code>hdb</code> backends for the main database. See
+the <code>olcDbDNcacheSize</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>data_envflags</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[String, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of flags for configuring the LMDB library used by the
+<code>mdb</code> backend.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>data_index_cachesize</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the size of the in-memory index cache maintained by the
+<code>bdb</code> or <code>hdb</code> backends for the main database. See
+the <code>olcDbIDLcacheSize</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>db_backend</span>
+      
+      
+        <span class='type'>(<tt>OpenLDAP::Backend</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::db_backend</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The chosen database backend, usually one of <code>hdb</code>,
+<code>bdb</code>, or <code>mdb</code>.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>group</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::group</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The group that runs the <code>slapd</code> process.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>indices</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[OpenLDAP::Index, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of index definitions in the same form as the
+<code>olcDbIndex</code> attribute.</p>
+
+<p>Do not include an index for the attributes applicable to the
+<code>syncprov</code> overlay. They are added automatically.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>interfaces</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[Bodgitlib::LDAP::URI::Simple, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::interfaces</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of <code>ldap:///</code> and/or <code>ldaps:///</code> URI&#39;s
+to listen on.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>limits</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[OpenLDAP::Limit, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of limits in the same form as the <code>olcLimits</code>
+attribute.</p>
+
+<p>Do not include a limit for the DN used by replication, one is added
+automatically when the <code>syncprov</code> parameter is used.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>local_ssf</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::local_ssf</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Security strength factor assigned to <code>ldapi</code> connections. This
+defaults to 256 which is a safeguard to prevent locking the Puppet agent
+out as it uses this connection to manipulate the configuration.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>log_level</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[OpenLDAP::LogLevel, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Set the logging level. Maps to the <code>olcLogLevel</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>memberof</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> enables the memberOf overlay. See the
+entry in <code>slapo-memberof(5)</code> man page for more details.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>module_extension</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::module_extension</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The extension module files have, normally <code>.la</code>.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>overlay_modules</span>
+      
+      
+        <span class='type'>(<tt>Array[OpenLDAP::Overlay]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::overlay_modules</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>A list of overlays by name that are modules.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>overlay_packages</span>
+      
+      
+        <span class='type'>(<tt>Hash[OpenLDAP::Overlay, String]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::overlay_packages</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>A hash keyed by overlay name with the package name that provides it as the
+value.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>package_ensure</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::server_package_ensure</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The standard package <code>ensure</code> parameter, usually
+<code>present</code>.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>package_name</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::server_package_name</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The name of the package to install that provides the LDAP
+<code>slapd</code> daemon.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>password_crypt_salt_format</span>
+      
+      
+        <span class='type'>(<tt>Optional[String]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The format of the salt for hashing user passwords. Corresponds to the
+<code>olcPasswordCryptSaltFormat</code> attribute. See the entry in the
+<code>slapd-config(5)</code> man page for formatting details.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>password_hash</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[OpenLDAP::PasswordHash, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The password hashing scheme to use for user passwords. Can be set to a list
+containing any of the following:</p>
+<ul><li>
+<p><code>{SSHA}</code>, <code>{SHA}</code></p>
+</li><li>
+<p><code>{SMD5}</code>, <code>{MD5}</code></p>
+</li><li>
+<p><code>{CRYPT}</code></p>
+</li><li>
+<p><code>{CLEARTEXT}</code></p>
+</li></ul>
+
+<p>The following schemes are also accepted however this requires additional
+modules to be loaded which are often not available by default:</p>
+<ul><li>
+<p><code>{SSHA256}</code>, <code>{SSHA384}</code>, <code>{SSHA512}</code>,
+<code>{SHA256}</code>, <code>{SHA384}</code>, <code>{SHA512}</code></p>
+</li><li>
+<p><code>{TOTP1}</code>, <code>{TOTP256}</code>, <code>{TOTP512}</code></p>
+</li><li>
+<p><code>{PBKDF2}</code>, <code>{PBKDF2-SHA1}</code>,
+<code>{PBKDF2-SHA256}</code>, <code>{PBKDF2-SHA512}</code></p>
+</li><li>
+<p><code>{BSDMD5}</code></p>
+</li><li>
+<p><code>{NS-MTA-MD5}</code></p>
+</li><li>
+<p><code>{APR1}</code></p>
+</li><li>
+<p><code>{RADIUS}</code></p>
+</li><li>
+<p><code>{KERBEROS}</code></p>
+</li></ul>
+
+<p>If this is not set, LDAP uses <code>{SSHA}</code> by default. Corresponds
+to the <code>olcPasswordHash</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>password_modules</span>
+      
+      
+        <span class='type'>(<tt>Hash[OpenLDAP::PasswordHash, String]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::password_modules</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>A hash keyed by password hashing scheme with the module name that provides
+it as the value. The hashing scheme is listed complete with enclosing
+<code>{}</code>&#39;s and the value is listed without any extension that
+the module filename might have.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>password_packages</span>
+      
+      
+        <span class='type'>(<tt>Hash[String, String]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::password_packages</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>A hash keyed by any values in <code>password_modules</code> with the
+package name that provides it as the value.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>pid_file</span>
+      
+      
+        <span class='type'>(<tt>Stdlib::Absolutepath</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::pid_file</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Where <code>slapd</code> writes out its PID.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ppolicy</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> will enable the <code>ppolicy</code>
+overlay on the main database allowing the enforcement of password
+strength/complexity as well as account lockout. The <code>ppolicy</code>
+schema will be loaded automatically.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ppolicy_default</span>
+      
+      
+        <span class='type'>(<tt>Optional[Bodgitlib::LDAP::DN]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>A Distinguished Name of the default password policy object to use if a user
+does not have a <code>pwdPolicySubEntry</code> attribute. This must exist
+under the main suffix.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ppolicy_forward_updates</span>
+      
+      
+        <span class='type'>(<tt>Optional[Boolean]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>If this server is a consumer/slave this setting controls whether password
+policy operational attributes are written locally or forwarded to the
+producer/master, (which means they can come back via replication). This
+requires enabling the <code>chain</code> overlay.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ppolicy_hash_cleartext</span>
+      
+      
+        <span class='type'>(<tt>Optional[Boolean]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> forces cleartext passwords to be hashed
+when updated via Add or Modify operations. This is not necessary if the
+Password Modify extended operation is normally used.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ppolicy_use_lockout</span>
+      
+      
+        <span class='type'>(<tt>Optional[Boolean]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> makes a bind to a locked account return
+an <code>AccountLocked</code> error instead of
+<code>InvalidCredentials</code>.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>refint</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> will enable the <code>refint</code>
+overlay on the main database allowing referential integrity on attribute
+values.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>refint_attributes</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[String, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Array of attributes for which integrity will be maintained.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>refint_nothing</span>
+      
+      
+        <span class='type'>(<tt>Optional[Bodgitlib::LDAP::DN]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Arbitrary value to be used as a placeholder when the last value would
+otherwise be deleted.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>replica_dn</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[Bodgitlib::LDAP::DN, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The Distinguished Names used by consumer/slave servers to connect to this
+server in order to replicate content.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>schema_dir</span>
+      
+      
+        <span class='type'>(<tt>Stdlib::Absolutepath</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::schema_dir</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The base directory used to store the schemas shipped with OpenLDAP. This is
+used as a default by the <code>openldap::server::schema</code> defined
+type.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>security</span>
+      
+      
+        <span class='type'>(<tt>Optional[OpenLDAP::Security]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify minimum security strength factors in the same form as the
+<code>olcSecurity</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>size_limit</span>
+      
+      
+        <span class='type'>(<tt>Optional[OpenLDAP::Limit::Size]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the maximum number of entries to return from a search operation.
+Maps to the <code>olcSizeLimit</code> attribute set on the
+<code>frontend</code> database.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>smbk5pwd</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> will enable the <code>smbk5pwd</code>
+overlay. In order to add this overlay to the database, the schema files for
+any enabled backends also need to be loaded. Both Red Hat and Debian/Ubuntu
+enable the Samba backend by default which requires the Samba schema.
+Debian/Ubuntu additionally enable the Kerberos backend which requires the
+Heimdal KDC/HDB schema and also <code>slapd</code> will need to be able to
+access the KDC master key (<code>m-key</code>) file.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>smbk5pwd_backends</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[Enum['krb5', 'samba', 'shadow'], 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>By default, all backends compiled into the overlay are enabled. Pass in an
+array of backends to enable only some of them. This affects which schemas
+need to be loaded and any additional setup steps. This maps to the
+<code>olcSmbK5PwdEnable</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>smbk5pwd_must_change</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcSmbK5PwdMustChange</code> attribute controlling how
+long until Samba passwords expire after a password change.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ssl_ca</span>
+      
+      
+        <span class='type'>(<tt>Optional[Stdlib::Absolutepath]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcTLSCACertificateFile</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ssl_cert</span>
+      
+      
+        <span class='type'>(<tt>Optional[Stdlib::Absolutepath]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcTLSCertificateFile</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ssl_certs_dir</span>
+      
+      
+        <span class='type'>(<tt>Optional[Stdlib::Absolutepath]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcTLSCACertificatePath</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ssl_cipher</span>
+      
+      
+        <span class='type'>(<tt>Optional[String]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcTLSCipherSuite</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ssl_dhparam</span>
+      
+      
+        <span class='type'>(<tt>Optional[Stdlib::Absolutepath]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcTLSDHParamFile</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ssl_key</span>
+      
+      
+        <span class='type'>(<tt>Optional[Stdlib::Absolutepath]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcTLSCertificateKeyFile</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ssl_protocol</span>
+      
+      
+        <span class='type'>(<tt>Optional[Variant[Integer[0], Float[0]]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcTLSProtocolMin</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>syncprov</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> will enable the <code>syncprov</code>
+overlay on the main database allowing consumer/slave servers to replicate
+the content.</p>
+
+<p>An additional index <code>entryCSN,entryUUID eq</code> will be appended to
+those passed by the <code>indices</code> parameter.</p>
+
+<p>The value of the <code>replica_dn</code> parameter is also used to prepend
+the ACL <code>to * by dn.exact=&quot;${replica_dn}&quot; read by *
+break</code> to those passed by the <code>access</code> parameter to allow
+the consumers to read all of the data. The limit
+<code>dn.exact=&quot;${replica_dn}&quot; time.soft=unlimited
+time.hard=unlimited size.soft=unlimited size.hard=unlimited</code> is also
+prepended to any limits passed with the <code>limits</code> parameter.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>syncprov_checkpoint</span>
+      
+      
+        <span class='type'>(<tt>Optional[OpenLDAP::Checkpoint]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::syncprov_checkpoint</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcSpCheckpoint</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>syncprov_sessionlog</span>
+      
+      
+        <span class='type'>(<tt>Optional[Integer[0]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::syncprov_sessionlog</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcSpSessionlog</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>syncrepl</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[OpenLDAP::Syncrepl, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>An array of <code>olcSyncrepl</code> attribute values used to establish a
+replication relationship between this server and a producer.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>time_limit</span>
+      
+      
+        <span class='type'>(<tt>Optional[OpenLDAP::Limit::Time]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Specify the maximum number of seconds <code>slapd</code> will spend
+answering a search request. Maps to the <code>olcTimeLimit</code> attribute
+set on the <code>frontend</code> database.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>unique</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Setting this to <code>true</code> will enable the <code>unique</code>
+overlay on the main database allowing the enforcement of attribute value
+uniqueness.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>unique_uri</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[OpenLDAP::Unique, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Maps to the <code>olcUniqueURI</code> attribute.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>update_ref</span>
+      
+      
+        <span class='type'>(<tt>Optional[Array[Bodgitlib::LDAP::URI::Simple, 1]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>One or more referral URI&#39;s to return for referring writes from a
+read-only replica server to the original producer/master server. These are
+used to configure the <code>chain</code> overlay.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>user</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$::openldap::params::user</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The user that runs the <code>slapd</code> process.</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><span class='object_link'><a href="openldap.html" title="puppet_classes::openldap (puppet_class)">::openldap</a></span></li>
+    
+      <li><span class='object_link'><a href="openldap_3A_3Aclient.html" title="puppet_classes::openldap::client (puppet_class)">::openldap::client</a></span></li>
+    
+      <li><span class='object_link'><a href="../puppet_defined_types/openldap_3A_3Aserver_3A_3Aschema.html" title="puppet_defined_types::openldap::server::schema (puppet_defined_type)">::openldap::server::schema</a></span></li>
+    
+  </ul>
+
+</div><div class="method_details_list">
+  <table class="source_code">
+    <tr>
+      <td>
+        <pre class="lines">
+
+
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470</pre>
+      </td>
+      <td>
+        <pre class="code"><span class="info file"># File 'manifests/server.pp', line 363</span>
+
+class openldap::server (
+  Bodgitlib::LDAP::DN                                 $root_dn,
+  String                                              $root_password,
+  Bodgitlib::LDAP::DN                                 $suffix,
+  Array[String, 1]                                    $access                     = $::openldap::params::access,
+  Boolean                                             $accesslog                  = false,
+  Optional[Integer[0]]                                $accesslog_cachesize        = undef,
+  Optional[OpenLDAP::Checkpoint]                      $accesslog_checkpoint       = undef,
+  Optional[Array[String, 1]]                          $accesslog_db_config        = undef,
+  Optional[Integer[0]]                                $accesslog_dn_cachesize     = undef,
+  Optional[Array[String, 1]]                          $accesslog_envflags         = undef,
+  Optional[Integer[0]]                                $accesslog_index_cachesize  = undef,
+  Stdlib::Absolutepath                                $args_file                  = $::openldap::params::args_file,
+  Boolean                                             $auditlog                   = false,
+  Optional[Stdlib::Absolutepath]                      $auditlog_file              = undef,
+  Optional[Enum[&#39;none&#39;, &#39;from&#39;, &#39;to&#39;, &#39;any&#39;, &#39;all&#39;]]  $authz_policy               = undef,
+  Array[OpenLDAP::Backend]                            $backend_modules            = $::openldap::params::backend_modules,
+  Hash[OpenLDAP::Backend, String]                     $backend_packages           = $::openldap::params::backend_packages,
+  Boolean                                             $chain                      = false,
+  Optional[OpenLDAP::LDAP::IDAssertBind]              $chain_id_assert_bind       = undef,
+  Optional[Boolean]                                   $chain_rebind_as_user       = undef,
+  Optional[Boolean]                                   $chain_return_error         = undef,
+  Optional[OpenLDAP::LDAP::TLS]                       $chain_tls                  = undef,
+  Optional[Integer[0]]                                $data_cachesize             = undef,
+  Optional[OpenLDAP::Checkpoint]                      $data_checkpoint            = undef,
+  Optional[Array[String, 1]]                          $data_db_config             = undef,
+  Stdlib::Absolutepath                                $data_directory             = $::openldap::params::data_directory,
+  Optional[Integer[0]]                                $data_dn_cachesize          = undef,
+  Optional[Array[String, 1]]                          $data_envflags              = undef,
+  Optional[Integer[0]]                                $data_index_cachesize       = undef,
+  OpenLDAP::Backend                                   $db_backend                 = $::openldap::params::db_backend,
+  String                                              $group                      = $::openldap::params::group,
+  Optional[Array[OpenLDAP::Index, 1]]                 $indices                    = undef,
+  Optional[Array[Bodgitlib::LDAP::URI::Simple, 1]]    $interfaces                 = $::openldap::params::interfaces,
+  Optional[Array[OpenLDAP::Limit, 1]]                 $limits                     = undef,
+  Optional[Integer[0]]                                $local_ssf                  = $::openldap::params::local_ssf,
+  Optional[Array[OpenLDAP::LogLevel, 1]]              $log_level                  = undef,
+  String                                              $module_extension           = $::openldap::params::module_extension,
+  Boolean                                             $memberof                   = false,
+  Array[OpenLDAP::Overlay]                            $overlay_modules            = $::openldap::params::overlay_modules,
+  Hash[OpenLDAP::Overlay, String]                     $overlay_packages           = $::openldap::params::overlay_packages,
+  String                                              $package_ensure             = $::openldap::params::server_package_ensure,
+  String                                              $package_name               = $::openldap::params::server_package_name,
+  Optional[String]                                    $password_crypt_salt_format = undef,
+  Optional[Array[OpenLDAP::PasswordHash, 1]]          $password_hash              = undef,
+  Hash[OpenLDAP::PasswordHash, String]                $password_modules           = $::openldap::params::password_modules,
+  Hash[String, String]                                $password_packages          = $::openldap::params::password_packages,
+  Stdlib::Absolutepath                                $pid_file                   = $::openldap::params::pid_file,
+  Boolean                                             $ppolicy                    = false,
+  Optional[Bodgitlib::LDAP::DN]                       $ppolicy_default            = undef,
+  Optional[Boolean]                                   $ppolicy_forward_updates    = undef,
+  Optional[Boolean]                                   $ppolicy_hash_cleartext     = undef,
+  Optional[Boolean]                                   $ppolicy_use_lockout        = undef,
+  Boolean                                             $refint                     = false,
+  Optional[Array[String, 1]]                          $refint_attributes          = undef,
+  Optional[Bodgitlib::LDAP::DN]                       $refint_nothing             = undef,
+  Optional[Array[Bodgitlib::LDAP::DN, 1]]             $replica_dn                 = undef,
+  Stdlib::Absolutepath                                $schema_dir                 = $::openldap::params::schema_dir,
+  Optional[OpenLDAP::Security]                        $security                   = undef,
+  Optional[OpenLDAP::Limit::Size]                     $size_limit                 = undef,
+  Boolean                                             $smbk5pwd                   = false,
+  Optional[Array[Enum[&#39;krb5&#39;, &#39;samba&#39;, &#39;shadow&#39;], 1]] $smbk5pwd_backends          = undef,
+  Optional[Integer[0]]                                $smbk5pwd_must_change       = undef,
+  Optional[Stdlib::Absolutepath]                      $ssl_ca                     = undef,
+  Optional[Stdlib::Absolutepath]                      $ssl_cert                   = undef,
+  Optional[Stdlib::Absolutepath]                      $ssl_certs_dir              = undef,
+  Optional[String]                                    $ssl_cipher                 = undef,
+  Optional[Stdlib::Absolutepath]                      $ssl_dhparam                = undef,
+  Optional[Stdlib::Absolutepath]                      $ssl_key                    = undef,
+  Optional[Variant[Integer[0], Float[0]]]             $ssl_protocol               = undef,
+  Boolean                                             $syncprov                   = false,
+  Optional[OpenLDAP::Checkpoint]                      $syncprov_checkpoint        = $::openldap::params::syncprov_checkpoint,
+  Optional[Integer[0]]                                $syncprov_sessionlog        = $::openldap::params::syncprov_sessionlog,
+  Optional[Array[OpenLDAP::Syncrepl, 1]]              $syncrepl                   = undef,
+  Optional[OpenLDAP::Limit::Time]                     $time_limit                 = undef,
+  Boolean                                             $unique                     = false,
+  Optional[Array[OpenLDAP::Unique, 1]]                $unique_uri                 = undef,
+  Optional[Array[Bodgitlib::LDAP::URI::Simple, 1]]    $update_ref                 = undef,
+  String                                              $user                       = $::openldap::params::user,
+) inherits ::openldap::params {
+
+  if ! (defined(Class[&#39;::openldap&#39;]) or defined(Class[&#39;::openldap::client&#39;])) {
+    fail(&#39;You must include either the openldap or openldap::client class as appropriate before using the openldap::server class&#39;)
+  }
+
+  if $auditlog and ! $auditlog_file {
+    fail(&#39;Audit Logging ovelay requires a log file&#39;)
+  }
+
+  if $chain and ! $update_ref {
+    fail(&#39;Chain overlay requires an update referral URL&#39;)
+  }
+
+  if $refint and ! $refint_attributes {
+    fail(&#39;Referential Integrity overlay requires attributes&#39;)
+  }
+
+  if $syncprov and ! $replica_dn {
+    fail(&#39;Sync Provider overlay requires a replica DN&#39;)
+  }
+
+  contain ::openldap::server::install
+  contain ::openldap::server::config
+  contain ::openldap::server::service
+
+  Class[&#39;::openldap::server::install&#39;] -&gt; Class[&#39;::openldap::server::service&#39;]
+  Class[&#39;::openldap::server::install&#39;] -&gt; Class[&#39;::openldap::server::config&#39;]
+}</pre>
+      </td>
+    </tr>
+  </table>
+</div>
+</div>
+
+      <div id="footer">
+  Generated on Tue May  2 23:40:21 2017 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.8 (ruby-2.2.5).
+</div>
+
+    </div>
+  </body>
+</html>

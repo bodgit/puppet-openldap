@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Defined Type: openldap::server::schema
+  
+    &mdash; Documentation by YARD 0.9.8
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  pathId = "puppet_defined_types::openldap::server::schema";
+  relpath = '../';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="../puppet_defined_type_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="../_index.html">Index (o)</a> &raquo;
+    <span class='title'><span class='object_link'>Defined Types</span></span>
+     &raquo; 
+    <span class="title">openldap::server::schema</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="puppet_class_list_link"
+        href="../puppet_class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Defined Type: openldap::server::schema</h1>
+<div class="box_info">
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>
+      manifests/server/schema.pp
+    </dd>
+  </dl>
+</div>
+
+<h2>Overview</h2>
+<div class="docstring">
+  <div class="discussion">
+    
+<p>Loads a schema into the OpenLDAP server</p>
+
+<p>This wraps the <code>openldap_schema</code> type with a sane default for
+the LDIF file in the case of loading the standard OpenLDAP schemas.</p>
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <p class="tag_title">Examples:</p>
+    
+      
+        <p class="example_title"><div class='inline'>
+<p>Loading a standard schema</p>
+</div></p>
+      
+      <pre class="example code"><code>::openldap::server::schema { &#39;cosine&#39;:
+  ensure =&gt; present,
+}</code></pre>
+    
+      
+        <p class="example_title"><div class='inline'>
+<p>Loading a third party schema from the filesystem</p>
+</div></p>
+      
+      <pre class="example code"><code>::openldap::server::schema { &#39;openssh-lpk&#39;:
+  ensure =&gt; present,
+  ldif   =&gt; &#39;/usr/share/doc/openssh-ldap-6.6.1p1/openssh-lpk-openldap.ldif&#39;,
+}</code></pre>
+    
+      
+        <p class="example_title"><div class='inline'>
+<p>Loading a third party schema from another Puppet module</p>
+</div></p>
+      
+      <pre class="example code"><code>::openldap::server::schema { &#39;postfix&#39;:
+  ensure =&gt; present,
+  ldif   =&gt; &#39;puppet:///postfix/postfix.ldif&#39;,
+}</code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>ensure</span>
+      
+      
+        <span class='type'>(<tt>Enum['absent', 'present']</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>&#39;present&#39;</tt>)</em>
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>ldif</span>
+      
+      
+        <span class='type'>(<tt>Optional[Variant[Stdlib::Absolutepath, Pattern[/^file:\/\//], Pattern[/^puppet:\/\//]]]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>undef</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Path to the LDIF file containing the schema, can be a local file path, a
+<code>file://</code> URL, or a <code>puppet://</code> URL. Will default to
+the schema directory for the server.</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>schema</span>
+      
+      
+        <span class='type'>(<tt>String[1]</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>$title</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>The name of the schema.</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><span class='object_link'><a href="../puppet_classes/openldap_3A_3Aserver.html" title="puppet_classes::openldap::server (puppet_class)">::openldap::server</a></span></li>
+    
+  </ul>
+
+</div><div class="method_details_list">
+  <table class="source_code">
+    <tr>
+      <td>
+        <pre class="lines">
+
+
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49</pre>
+      </td>
+      <td>
+        <pre class="code"><span class="info file"># File 'manifests/server/schema.pp', line 30</span>
+
+define openldap::server::schema (
+  Enum[&#39;absent&#39;, &#39;present&#39;]                                                               $ensure = &#39;present&#39;,
+  Optional[Variant[Stdlib::Absolutepath, Pattern[/^file:\/\//], Pattern[/^puppet:\/\//]]] $ldif   = undef,
+  String[1]                                                                               $schema = $title,
+) {
+
+  if ! defined(Class[&#39;::openldap::server&#39;]) {
+    fail(&#39;You must include the openldap::server class before using any openldap defined resources&#39;)
+  }
+
+  $_ldif = $ldif ? {
+    undef   =&gt; &quot;${::openldap::server::schema_dir}/${schema}.ldif&quot;,
+    default =&gt; $ldif,
+  }
+
+  openldap_schema { $schema:
+    ensure =&gt; $ensure,
+    ldif   =&gt; $_ldif,
+  }
+}</pre>
+      </td>
+    </tr>
+  </table>
+</div>
+</div>
+
+      <div id="footer">
+  Generated on Tue May  2 23:40:21 2017 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.8 (ruby-2.2.5).
+</div>
+
+    </div>
+  </body>
+</html>
