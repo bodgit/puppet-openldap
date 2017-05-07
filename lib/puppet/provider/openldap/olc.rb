@@ -82,7 +82,7 @@ Puppet::Type.type(:openldap).provide(:olc) do
       case @property_flush[:ensure]
       when :absent
         temp << "changetype: delete\n"
-       when :present
+      when :present
         temp << "changetype: add\n"
         resource[:attributes].each do |k,values|
           values.each do |v|

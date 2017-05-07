@@ -1,5 +1,4 @@
 require 'set'
-require 'uri'
 
 Puppet::Type.newtype(:openldap) do
   desc <<-DESC
