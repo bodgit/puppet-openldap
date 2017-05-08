@@ -9,8 +9,40 @@
 #     root_password => '{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY',
 #     suffix        => 'dc=example,dc=com',
 #     access        => [
-#       'to attrs=userPassword by self =xw by anonymous auth',
-#       'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by self write by users read',
+#       [
+#         {
+#           'attrs' => ['userPassword'],
+#         },
+#         [
+#           {
+#             'who'    => ['self'],
+#             'access' => '=xw',
+#           },
+#           {
+#             'who'    => ['anonymous'],
+#             'access' => 'auth',
+#           },
+#         ],
+#       ],
+#       [
+#         {
+#           'dn' => '*',
+#         },
+#         [
+#           {
+#             'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth'],
+#             'access' => 'manage',
+#           },
+#           {
+#             'who'    => ['self'],
+#             'access' => 'write',
+#           },
+#           {
+#             'who'    => ['users'],
+#             'access' => 'read',
+#           },
+#         ],
+#       ],
 #     ],
 #     indices       => [
 #       [['objectClass'], ['eq', 'pres']],
@@ -38,8 +70,40 @@
 #     root_password => '{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY',
 #     suffix        => 'dc=example,dc=com',
 #     access        => [
-#       'to attrs=userPassword by self =xw by anonymous auth',
-#       'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by self write by users read',
+#       [
+#         {
+#           'attrs' => ['userPassword'],
+#         },
+#         [
+#           {
+#             'who'    => ['self'],
+#             'access' => '=xw',
+#           },
+#           {
+#             'who'    => ['anonymous'],
+#             'access' => 'auth',
+#           },
+#         ],
+#       ],
+#       [
+#         {
+#           'dn' => '*',
+#         },
+#         [
+#           {
+#             'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth'],
+#             'access' => 'manage',
+#           },
+#           {
+#             'who'    => ['self'],
+#             'access' => 'write',
+#           },
+#           {
+#             'who'    => ['users'],
+#             'access' => 'read',
+#           },
+#         ],
+#       ],
 #     ],
 #     indices       => [
 #       [['objectClass'], ['eq', 'pres']],
@@ -69,8 +133,40 @@
 #     root_password => '{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY',
 #     suffix        => 'dc=example,dc=com',
 #     access        => [
-#       'to attrs=userPassword by self =xw by anonymous auth',
-#       'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by self write by users read',
+#       [
+#         {
+#           'attrs' => ['userPassword'],
+#         },
+#         [
+#           {
+#             'who'    => ['self'],
+#             'access' => '=xw',
+#           },
+#           {
+#             'who'    => ['anonymous'],
+#             'access' => 'auth',
+#           },
+#         ],
+#       ],
+#       [
+#         {
+#           'dn' => '*',
+#         },
+#         [
+#           {
+#             'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth'],
+#             'access' => 'manage',
+#           },
+#           {
+#             'who'    => ['self'],
+#             'access' => 'write',
+#           },
+#           {
+#             'who'    => ['users'],
+#             'access' => 'read',
+#           },
+#         ],
+#       ],
 #     ],
 #     accesslog     => true,
 #     indices       => [
@@ -101,8 +197,40 @@
 #     root_password => '{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY',
 #     suffix        => 'dc=example,dc=com',
 #     access        => [
-#       'to attrs=userPassword by self =xw by anonymous auth',
-#       'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by self write by users read',
+#       [
+#         {
+#           'attrs' => ['userPassword'],
+#         },
+#         [
+#           {
+#             'who'    => ['self'],
+#             'access' => '=xw',
+#           },
+#           {
+#             'who'    => ['anonymous'],
+#             'access' => 'auth',
+#           },
+#         ],
+#       ],
+#       [
+#         {
+#           'dn' => '*',
+#         },
+#         [
+#           {
+#             'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth'],
+#             'access' => 'manage',
+#           },
+#           {
+#             'who'    => ['self'],
+#             'access' => 'write',
+#           },
+#           {
+#             'who'    => ['users'],
+#             'access' => 'read',
+#           },
+#         ],
+#       ],
 #     ],
 #     indices       => [
 #       [['objectClass'], ['eq', 'pres']],
@@ -364,7 +492,7 @@ class openldap::server (
   Bodgitlib::LDAP::DN                                 $root_dn,
   String                                              $root_password,
   Bodgitlib::LDAP::DN                                 $suffix,
-  Array[String, 1]                                    $access                     = $::openldap::params::access,
+  Array[OpenLDAP::Access, 1]                          $access                     = $::openldap::params::access,
   Boolean                                             $accesslog                  = false,
   Optional[Integer[0]]                                $accesslog_cachesize        = undef,
   Optional[OpenLDAP::Checkpoint]                      $accesslog_checkpoint       = undef,

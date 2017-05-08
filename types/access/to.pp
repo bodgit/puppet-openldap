@@ -1,0 +1,2 @@
+# @since 2.0.0
+type OpenLDAP::Access::To = Struct[{Optional['dn'] => Variant[Enum['*'], Pattern[/(?x) ^ dn (?: \. (?: exact | base (?: object )? | regex | one (?: level )? | sub (?: tree )? | children ) )? = .+ $/]], Optional['filter'] => Bodgitlib::LDAP::Filter, Optional['attrs'] => Variant[Array[Pattern[/(?x) ^ .+ $/], 1], Pattern[/(?x) ^ .+ \s val (?: \/ [^.=]+ )? (?: \. (?: exact | base (?: object )? | regex | one (?: level )? | sub (?: tree )? | children ) )? = .+ $/]]}]

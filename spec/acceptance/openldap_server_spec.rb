@@ -35,16 +35,6 @@ describe 'openldap::server' do
   end
 
   it 'should work with no errors' do
-    # FIXME replication
-    # producer  = only_host_with_role(hosts, 'producer')
-    # consumers = hosts_with_role(hosts, 'consumer')
-    # apply_manifest_on(producer, pp, :catch_failures => true)
-    # apply_manifest_on(producer, pp, :catch_changes  => true)
-    # consumers.each do |consumer|
-    #   apply_manifest_on(consumer, pp, :catch_failures => true)
-    #   apply_manifest_on(consumer, pp, :catch_changes  => true)
-    # end
-
     pp = <<-EOS
       Package {
         source => $::osfamily ? {
@@ -102,9 +92,50 @@ describe 'openldap::server' do
         root_password           => 'secret',
         suffix                  => 'dc=example,dc=com',
         access                  => [
-          'to attrs=userPassword by self =xw by anonymous auth',
-          'to attrs=sambaLMPassword,sambaNTPassword by self =w',
-          'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by users read',
+          [
+            {
+              'attrs' => ['userPassword'],
+            },
+            [
+              {
+                'who'    => ['self'],
+                'access' => '=xw',
+              },
+              {
+                'who'    => ['anonymous'],
+                'access' => 'auth',
+              },
+            ],
+          ],
+          [
+            {
+              'attrs' => [
+                'sambaLMPassword',
+                'sambaNTPassword',
+              ],
+            },
+            [
+              {
+                'who'    => ['self'],
+                'access' => '=w',
+              },
+            ],
+          ],
+          [
+            {
+              'dn' => '*',
+            },
+            [
+              {
+                'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth"'],
+                'access' => 'manage',
+              },
+              {
+                'who'    => ['users'],
+                'access' => 'read',
+              },
+            ],
+          ],
         ],
         auditlog                => true,
         auditlog_file           => '/tmp/auditlog.ldif',

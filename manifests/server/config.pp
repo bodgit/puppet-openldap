@@ -278,7 +278,17 @@ class openldap::server::config {
   if $::openldap::server::syncprov {
 
     $replica_access = $replica_dn.map |String $x| {
-      "to * by dn.exact=\"${x}\" read"
+      [
+        {
+          'dn' => '*',
+        },
+        [
+          {
+            'who'    => ["dn.exact=\"${x}\""],
+            'access' => 'read',
+          },
+        ],
+      ]
     }
 
     $replica_limits = $replica_dn.map |String $x| {
@@ -297,8 +307,22 @@ class openldap::server::config {
 
     # Prepend replica ACL to any on the main database and also create indices
     # required by the overlay
-    $access = $replica_access.map |String $x| {
-      "${x} by * break"
+    $access = $replica_dn.map |String $x| {
+      [
+        {
+          'dn' => '*',
+        },
+        [
+          {
+            'who'    => ["dn.exact=\"${x}\""],
+            'access' => 'read',
+          },
+          {
+            'who'     => ['*'],
+            'control' => 'break',
+          },
+        ],
+      ]
     } + $::openldap::server::access
 
     if $::openldap::server::indices {
@@ -350,7 +374,7 @@ class openldap::server::config {
             'olcDatabaseConfig',
             $object_class,
           ],
-          'olcAccess'         => openldap::values($replica_access),
+          'olcAccess'         => openldap::values(openldap::flatten_access($replica_access)),
           'olcDatabase'       => "{2}${db_backend}",
           'olcDbCacheSize'    => $accesslog_cachesize,
           'olcDbCheckpoint'   => openldap::flatten_checkpoint($::openldap::server::accesslog_checkpoint),
@@ -446,7 +470,7 @@ class openldap::server::config {
         'olcDatabaseConfig',
         $object_class,
       ],
-      'olcAccess'         => openldap::values($access),
+      'olcAccess'         => openldap::values(openldap::flatten_access($access)),
       'olcDatabase'       => "{${db_index}}${db_backend}",
       'olcDbCacheSize'    => $data_cachesize,
       'olcDbCheckpoint'   => openldap::flatten_checkpoint($::openldap::server::data_checkpoint),

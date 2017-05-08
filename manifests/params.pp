@@ -1,7 +1,19 @@
 # @!visibility private
 class openldap::params {
 
-  $access              = ['to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage']
+  $access              = [
+    [
+      {
+        'dn' => '*',
+      },
+      [
+        {
+          'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth"'],
+          'access' => 'manage',
+        },
+      ],
+    ],
+  ]
   $interfaces          = ['ldap:///']
   $local_ssf           = 256
   $module_extension    = '.la'

@@ -75,8 +75,40 @@ class { '::openldap::server':
   root_password => '{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY',
   suffix        => 'dc=example,dc=com',
   access        => [
-    'to attrs=userPassword by self =xw by anonymous auth',
-    'to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by self write by users read',
+    [
+      {
+        'attrs' => ['userPassword'],
+      },
+      [
+        {
+          'who'    => ['self'],
+          'access' => '=xw',
+        },
+        {
+          'who'    => ['anonymous'],
+          'access' => 'auth',
+        },
+      ],
+    ],
+    [
+      {
+        'dn' => '*',
+      },
+      [
+        {
+          'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth'],
+          'access' => 'manage',
+        },
+        {
+          'who'    => ['self'],
+          'access' => 'write',
+        },
+        {
+          'who'    => ['users'],
+          'access' => 'read',
+        },
+      ],
+    ],
   ],
   indices       => [
     [['objectClass'], ['eq', 'pres']],
@@ -112,13 +144,17 @@ probably want out of OpenLDAP; a single database, possibly replicated. This
 is largely due to a number of behaviours and idiosyncrasies of OpenLDAP; the
 order of overlays matters for example.
 
-As alluded to by the openldap native type, a lot of attributes or objects are
-additive and can't be deleted without manually editing the configuration. This
-module will always try and issue the necessary LDIF commands however the server
-will sometimes be "unwilling to perform" them. This means that if you try to
-convert from say a replicating producer back to a standalone server you will
-probably get errors from trying to remove the various replication objects.
-However things should always build from scratch cleanly.
+Most of the attributes or objects are additive and cannot be deleted without
+manually editing the configuration with the server stopped. This module will
+always try and issue the necessary LDIF commands however the server will likely
+be "unwilling to perform" them. Experimental delete support is apparently
+available as a compile-time option which may allow this module to remove
+configuration more easily but I have not tested it.
+
+This means that if you try to convert from say a replicating producer back to a
+standalone server you will probably get errors from trying to remove the
+various replication objects.  However things should always build from scratch
+cleanly.
 
 This module has been built on and tested against Puppet 4.4.0 and higher.
 
