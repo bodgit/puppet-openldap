@@ -96,7 +96,7 @@ class { '::openldap::server':
       },
       [
         {
-          'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth'],
+          'who'    => ['dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth"'],
           'access' => 'manage',
         },
         {
