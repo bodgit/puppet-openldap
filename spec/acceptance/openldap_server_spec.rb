@@ -18,8 +18,14 @@ describe 'openldap::server' do
     service_name   = 'slapd'
   when 'Debian'
     data_directory = '/var/lib/ldap'
-    db_package     = 'db5.3-util'
-    db_stat        = 'db5.3_stat'
+    case fact('operatingsystemmajrelease')
+    when '7'
+      db_package = 'db5.1-util'
+      db_stat    = 'db5.1_stat'
+    else
+      db_package = 'db5.3-util'
+      db_stat    = 'db5.3_stat'
+    end
     package_name   = 'slapd'
     samba_package  = 'samba'
     samba_schema   = '/usr/share/doc/samba/examples/LDAP/samba.ldif'
@@ -200,21 +206,26 @@ describe 'openldap::server' do
 
       case $::osfamily {
         'Debian': {
-          service { 'apparmor':
-            ensure     => running,
-            enable     => true,
-            hasstatus  => true,
-            hasrestart => true,
-            before     => Class['::openldap::server'],
+          case $::operatingsystem {
+            'Ubuntu': {
+              service { 'apparmor':
+                ensure     => running,
+                enable     => true,
+                hasstatus  => true,
+                hasrestart => true,
+                before     => Class['::openldap::server'],
+              }
+              file { '/etc/apparmor.d/local/usr.sbin.slapd':
+                ensure  => file,
+                owner   => 0,
+                group   => 0,
+                mode    => '0600',
+                content => "/tmp/* kw,\n",
+                notify  => Service['apparmor'],
+              }
+            }
           }
-          file { '/etc/apparmor.d/local/usr.sbin.slapd':
-            ensure  => file,
-            owner   => 0,
-            group   => 0,
-            mode    => '0600',
-            content => "/tmp/* kw,\n",
-            notify  => Service['apparmor'],
-          }
+
           exec { 'gzip -d #{samba_schema}.gz':
             path    => $::path,
             creates => '#{samba_schema}',
