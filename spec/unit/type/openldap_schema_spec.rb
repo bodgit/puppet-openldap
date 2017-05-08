@@ -33,6 +33,10 @@ describe Puppet::Type.type(:openldap_schema) do
       it 'should support a puppet url' do
         expect(described_class.new(:name => 'cn=config', :ldif => 'puppet:///modules/openldap/test.ldif', :ensure => :present)[:ldif]).to eq('puppet:///modules/openldap/test.ldif')
       end
+
+      it 'should error with an invalid url' do
+        expect{described_class.new(:name => 'cn=config', :ldif => ':', :ensure => :present)}.to raise_error(/Could not understand LDIF/)
+      end
     end
 
     describe 'autorequire' do
