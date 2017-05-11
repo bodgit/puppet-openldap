@@ -150,8 +150,40 @@ class { &#39;::openldap::server&#39;:
   root_password =&gt; &#39;{SSHA}7dSAJPGe4YKKEvUPuGJIeSL/03GV2IMY&#39;,
   suffix        =&gt; &#39;dc=example,dc=com&#39;,
   access        =&gt; [
-    &#39;to attrs=userPassword by self =xw by anonymous auth&#39;,
-    &#39;to * by dn.base=&quot;gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth&quot; manage by self write by users read&#39;,
+    [
+      {
+        &#39;attrs&#39; =&gt; [&#39;userPassword&#39;],
+      },
+      [
+        {
+          &#39;who&#39;    =&gt; [&#39;self&#39;],
+          &#39;access&#39; =&gt; &#39;=xw&#39;,
+        },
+        {
+          &#39;who&#39;    =&gt; [&#39;anonymous&#39;],
+          &#39;access&#39; =&gt; &#39;auth&#39;,
+        },
+      ],
+    ],
+    [
+      {
+        &#39;dn&#39; =&gt; &#39;*&#39;,
+      },
+      [
+        {
+          &#39;who&#39;    =&gt; [&#39;dn.base=&quot;gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth&quot;&#39;],
+          &#39;access&#39; =&gt; &#39;manage&#39;,
+        },
+        {
+          &#39;who&#39;    =&gt; [&#39;self&#39;],
+          &#39;access&#39; =&gt; &#39;write&#39;,
+        },
+        {
+          &#39;who&#39;    =&gt; [&#39;users&#39;],
+          &#39;access&#39; =&gt; &#39;read&#39;,
+        },
+      ],
+    ],
   ],
   indices       =&gt; [
     [[&#39;objectClass&#39;], [&#39;eq&#39;, &#39;pres&#39;]],
@@ -186,11 +218,14 @@ probably want out of OpenLDAP; a single database, possibly replicated. This
 is largely due to a number of behaviours and idiosyncrasies of OpenLDAP;
 the order of overlays matters for example.</p>
 
-<p>As alluded to by the openldap native type, a lot of attributes or objects
-are additive and can&#39;t be deleted without manually editing the
-configuration. This module will always try and issue the necessary LDIF
-commands however the server will sometimes be “unwilling to perform” them.
-This means that if you try to convert from say a replicating producer back
+<p>Most of the attributes or objects are additive and cannot be deleted
+without manually editing the configuration with the server stopped. This
+module will always try and issue the necessary LDIF commands however the
+server will likely be “unwilling to perform” them. Experimental delete
+support is apparently available as a compile-time option which may allow
+this module to remove configuration more easily but I have not tested it.</p>
+
+<p>This means that if you try to convert from say a replicating producer back
 to a standalone server you will probably get errors from trying to remove
 the various replication objects. However things should always build from
 scratch cleanly.</p>
@@ -222,7 +257,7 @@ href="https://github.com/bodgit/puppet-openldap">github</a>.</p>
 </div></div>
 
       <div id="footer">
-  Generated on Mon May  8 17:29:36 2017 by
+  Generated on Thu May 11 23:22:31 2017 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.8 (ruby-2.2.5).
 </div>
