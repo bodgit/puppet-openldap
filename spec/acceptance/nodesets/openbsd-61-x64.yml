@@ -1,0 +1,11 @@
+HOSTS:
+  openbsd-61-x64:
+    roles:
+      - master
+    platform: openbsd-6.1-amd64
+    box: bodgit/openbsd-6.1-amd64
+    box_url: https://atlas.hashicorp.com/bodgit/boxes/openbsd-6.1-amd64
+    hypervisor: vagrant
+    distmoduledir: /etc/puppetlabs/code/modules
+CONFIG:
+  type: aio

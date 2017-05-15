@@ -165,7 +165,10 @@ class openldap::params {
       $password_modules      = {}
       $pid_file              = '/var/run/openldap/slapd.pid'
       $schema_dir            = "${conf_dir}/schema"
-      $server_package_ensure = '2.4.44p0' # There's two packages, without this you'll get the older 2.3.x version
+      $server_package_ensure = $::operatingsystemrelease ? { # There's two packages, without this you'll get the older 2.3.x version
+        '6.0' => '2.4.44p0',
+        '6.1' => '2.4.44p3',
+      }
       $server_package_name   = 'openldap-server'
       $server_service_name   = 'slapd'
       $user                  = '_openldap'

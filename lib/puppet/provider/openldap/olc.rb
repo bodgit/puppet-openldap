@@ -30,12 +30,12 @@ Puppet::Type.type(:openldap).provide(:olc) do
     o.split("\n\n").collect do |object|
       name = nil
       attributes = {}
-      object.split("\n").collect do |line|
+      object.split("\n").each do |line|
         case line
         when /^dn: (.+)$/
           name = $1
-        else
-          k, encoded, v = line.match(/^([^:]+):(:)? (.*)$/).captures
+        when /^([^:]+):(:)? (.*)$/
+          k, encoded, v = $1, $2, $3
 
           # Don't include "internal" attributes
           next if EXCLUDED.include?(k)

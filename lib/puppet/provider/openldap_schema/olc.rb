@@ -28,8 +28,7 @@ Puppet::Type.type(:openldap_schema).provide(:olc) do
     o = slapcat '-b', 'cn=config', '-o', 'ldif-wrap=no', '-H', 'ldap:///???(entryDN:dnSubordinateMatch:=cn=schema,cn=config)'
     o.split("\n\n").collect do |object|
       name = nil
-      attributes = {}
-      object.split("\n").collect do |line|
+      object.split("\n").each do |line|
         case line
         when /^dn: cn=\{\d+\}([^,]+),cn=schema,cn=config$/
           name = $1
