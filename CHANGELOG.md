@@ -1,5 +1,12 @@
 # Change Log
 
+## [v2.0.1](https://github.com/bodgit/puppet-openldap/tree/v2.0.1) (2017-05-15)
+[Full Changelog](https://github.com/bodgit/puppet-openldap/compare/v2.0.0...v2.0.1)
+
+**Implemented enhancements:**
+
+- OpenBSD 6.1 support [\#50](https://github.com/bodgit/puppet-openldap/issues/50)
+
 ## [v2.0.0](https://github.com/bodgit/puppet-openldap/tree/v2.0.0) (2017-05-08)
 [Full Changelog](https://github.com/bodgit/puppet-openldap/compare/v1.4.1...v2.0.0)
 
