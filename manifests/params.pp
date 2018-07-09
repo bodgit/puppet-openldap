@@ -168,6 +168,8 @@ class openldap::params {
       $server_package_ensure = $::operatingsystemrelease ? { # There's two packages, without this you'll get the older 2.3.x version
         '6.0' => '2.4.44p0',
         '6.1' => '2.4.44p3',
+        '6.2' => '2.4.45p4',
+        '6.3' => '2.4.45p5',
       }
       $server_package_name   = 'openldap-server'
       $server_service_name   = 'slapd'

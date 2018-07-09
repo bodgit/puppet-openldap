@@ -163,7 +163,7 @@ The module has been tested on:
 * RedHat Enterprise Linux 6/7
 * Ubuntu 14.04/16.04
 * Debian 7/8
-* OpenBSD 6.0
+* OpenBSD 6.0/6.1/6.2/6.3
 
 ## Development
 
