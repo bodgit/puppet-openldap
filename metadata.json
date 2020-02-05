@@ -1,6 +1,6 @@
 {
   "name": "bodgit-openldap",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "author": "bodgit",
   "summary": "Puppet Module for managing OpenLDAP",
   "license": "Apache-2.0",
