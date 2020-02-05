@@ -29,6 +29,7 @@ class openldap::config {
     tls_cacert                    => $::openldap::tls_cacert,
     tls_cacertdir                 => $::openldap::tls_cacertdir,
     tls_cipher_suite              => $::openldap::tls_cipher_suite,
+    tls_moznss_compatibility      => $::openldap::tls_moznss_compatibility,
     tls_protocol_min              => $::openldap::tls_protocol_min,
     tls_randfile                  => $::openldap::tls_randfile,
     tls_reqcert                   => $::openldap::tls_reqcert,

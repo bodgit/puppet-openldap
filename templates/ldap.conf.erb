@@ -84,3 +84,6 @@ TLS_CRLCHECK			<%= @tls_crlcheck %>
 <% if @tls_crlfile -%>
 TLS_CRLFILE			<%= @tls_crlfile %>
 <% end -%>
+<% unless @tls_moznss_compatibility.nil? -%>
+TLS_MOZNSS_COMPATIBILITY	<%= @tls_moznss_compatibility ? 'on' : 'off' %>
+<% end -%>

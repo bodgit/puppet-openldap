@@ -40,6 +40,7 @@
 # @param tls_cert Maps to the `TLS_CERT` `ldap.conf` option.
 # @param tls_key Maps to the `TLS_KEY` `ldap.conf` option.
 # @param tls_cipher_suite Maps to the `TLS_CIPHER_SUITE` `ldap.conf` option.
+# @param tls_moznss_compatibility Maps to the `TLS_MOZNSS_COMPATIBILITY` `ldap.conf` option.
 # @param tls_protocol_min Maps to the `TLS_PROTOCOL_MIN` `ldap.conf` option.
 # @param tls_randfile Maps to the `TLS_RANDFILE` `ldap.conf` option.
 # @param tls_reqcert Maps to the `TLS_REQCERT` `ldap.conf` option.
@@ -80,6 +81,7 @@ define openldap::configuration (
   Optional[Stdlib::Absolutepath]                            $tls_cert                      = undef,
   Optional[Stdlib::Absolutepath]                            $tls_key                       = undef,
   Optional[String]                                          $tls_cipher_suite              = undef,
+  Optional[Boolean]                                         $tls_moznss_compatibility      = undef,
   Optional[Variant[Integer[0], Float[0]]]                   $tls_protocol_min              = undef,
   Optional[Stdlib::Absolutepath]                            $tls_randfile                  = undef,
   Optional[Enum['never', 'allow', 'try', 'demand', 'hard']] $tls_reqcert                   = undef,

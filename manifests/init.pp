@@ -26,6 +26,7 @@
 # @param tls_cacert See the `openldap::configuration` defined type.
 # @param tls_cacertdir See the `openldap::configuration` defined type.
 # @param tls_cipher_suite See the `openldap::configuration` defined type.
+# @param tls_moznss_compatibility See the `openldap::configuration` defined type.
 # @param tls_protocol_min See the `openldap::configuration` defined type.
 # @param tls_randfile See the `openldap::configuration` defined type.
 # @param tls_reqcert See the `openldap::configuration` defined type.
@@ -55,6 +56,7 @@ class openldap (
   Any                  $tls_cacert                    = undef,
   Any                  $tls_cacertdir                 = undef,
   Any                  $tls_cipher_suite              = undef,
+  Any                  $tls_moznss_compatibility      = undef,
   Any                  $tls_protocol_min              = undef,
   Any                  $tls_randfile                  = undef,
   Any                  $tls_reqcert                   = undef,
