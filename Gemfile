@@ -13,7 +13,7 @@ group :development, :test do
   gem 'puppet-lint-empty_string-check',                   :require => false
   gem 'puppet-lint-spaceship_operator_without_tag-check', :require => false
   gem 'puppet-lint-variable_contains_upcase',             :require => false
-  gem 'puppet-lint-absolute_classname-check',             :require => false
+  gem 'puppet-lint-absolute_classname-check', '< 2.0.0',  :require => false
   gem 'puppet-lint-undef_in_function-check',              :require => false
   gem 'puppet-lint-leading_zero-check',                   :require => false
   gem 'puppet-lint-trailing_comma-check',                 :require => false
